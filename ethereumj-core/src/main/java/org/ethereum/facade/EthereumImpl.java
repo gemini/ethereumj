@@ -284,7 +284,7 @@ public class EthereumImpl implements Ethereum {
 
         try {
             org.ethereum.core.TransactionExecutor executor = new org.ethereum.core.TransactionExecutor
-                    (tx, bestBlock.getCoinbase(), repository, worldManager.getBlockStore(),
+                    (config, tx, bestBlock.getCoinbase(), repository, worldManager.getBlockStore(),
                     programInvokeFactory, bestBlock)
                     .setLocalCall(true);
 

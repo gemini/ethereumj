@@ -22,7 +22,7 @@ import java.net.InetSocketAddress;
 import java.util.*;
 
 import static java.lang.Math.min;
-import static org.ethereum.config.SystemProperties.CONFIG;
+
 
 /**
  * The central class for Peer Discovery machinery.
@@ -55,7 +55,7 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
     EthereumListener ethereumListener;
 
     @Autowired
-    SystemProperties config = SystemProperties.CONFIG;
+    SystemProperties config;
 
     Functional.Consumer<DiscoveryEvent> messageSender;
 
@@ -148,7 +148,7 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
     private void dbRead() {
         try {
             db = mapDBFactory.createTransactionalDB("network/discovery");
-            if (SystemProperties.CONFIG.databaseReset()) {
+            if (config.databaseReset()) {
                 logger.info("Resetting DB Node statistics...");
                 db.delete("nodeStats");
             }

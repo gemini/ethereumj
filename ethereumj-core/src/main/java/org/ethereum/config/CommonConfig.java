@@ -37,7 +37,7 @@ public class CommonConfig {
     @Autowired
     private MapDBFactory mapDBFactory;
     @Autowired
-    SystemProperties config = SystemProperties.CONFIG;
+    SystemProperties config;
 
 
     @Bean
@@ -163,7 +163,7 @@ public class CommonConfig {
 
         List<DependentBlockHeaderRule> rules = new ArrayList<>(asList(
                 new ParentNumberRule(),
-                new DifficultyRule(),
+                new DifficultyRule(config.getBlockchainConfig()),
                 new ParentGasLimitRule()
         ));
 
@@ -172,6 +172,6 @@ public class CommonConfig {
 
     @Bean
     public SystemProperties systemProperties() {
-        return SystemProperties.CONFIG;
+        return SystemProperties.getDefault();
     }
 }

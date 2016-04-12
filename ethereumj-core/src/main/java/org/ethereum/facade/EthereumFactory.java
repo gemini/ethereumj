@@ -12,10 +12,7 @@ import org.ethereum.util.FileUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -30,14 +27,17 @@ import java.util.List;
 public class EthereumFactory {
 
     private static final Logger logger = LoggerFactory.getLogger("general");
-    public static ApplicationContext context = null;
 
     public static Ethereum createEthereum() {
-        return createEthereum((Class) null);
+        return createEthereum(SystemProperties.getDefault());
+    }
+
+    public static Ethereum createEthereum(SystemProperties config) {
+        return createEthereum(config, null);
     }
 
     public static Ethereum createEthereum(Class userSpringConfig) {
-        return createEthereum(SystemProperties.CONFIG, userSpringConfig);
+        return createEthereum(SystemProperties.getDefault(), userSpringConfig);
     }
 
     public static Ethereum createEthereum(SystemProperties config, Class userSpringConfig) {
@@ -50,11 +50,9 @@ public class EthereumFactory {
             logger.info("Database reset done");
         }
 
-        return userSpringConfig == null ? createEthereum(new Class[] {DefaultConfig.class}) :
-                createEthereum(DefaultConfig.class, userSpringConfig);
-    }
-
-    public static Ethereum createEthereum(Class ... springConfigs) {
+        Class[] springConfigs = userSpringConfig == null ?
+                new Class[] { DefaultConfig.class } :
+                new Class[] { DefaultConfig.class, userSpringConfig };
 
         if (logger.isInfoEnabled()) {
             StringBuilder versions = new StringBuilder();
@@ -67,7 +65,10 @@ public class EthereumFactory {
         logger.info("capability shh version: [{}]", ShhHandler.VERSION);
         logger.info("capability bzz version: [{}]", BzzHandler.VERSION);
 
-        context = new AnnotationConfigApplicationContext(springConfigs);
+        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(springConfigs);
+        context.getBeanFactory().registerSingleton("systemProperties", config);
+        context.refresh();
         return context.getBean(Ethereum.class);
     }
+
 }

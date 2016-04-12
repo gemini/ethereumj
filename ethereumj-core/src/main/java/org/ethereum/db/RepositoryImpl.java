@@ -16,6 +16,7 @@ import org.ethereum.vm.DataWord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.FileSystemUtils;
 
 import javax.annotation.Nonnull;
@@ -29,7 +30,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static java.lang.Thread.sleep;
-import static org.ethereum.config.SystemProperties.CONFIG;
+
 import static org.ethereum.crypto.HashUtil.EMPTY_DATA_HASH;
 import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.ethereum.crypto.SHA3Helper.sha3;
@@ -62,8 +63,8 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
 
     private boolean isSnapshot = false;
 
-//    @Autowired  TODO autowire
-    SystemProperties config = SystemProperties.CONFIG;
+    @Autowired
+    SystemProperties config;
 
     public RepositoryImpl() {
 
@@ -256,7 +257,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
 
     @Override
     public synchronized Repository startTracking() {
-        return new RepositoryTrack(this);
+        return new RepositoryTrack(this, config);
     }
 
     @Override
@@ -395,7 +396,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     public synchronized BigInteger getBalance(byte[] addr) {
         if (!isExist(addr)) return BigInteger.ZERO;
         AccountState account = getAccountState(addr);
-        return (account == null) ? AccountState.EMPTY.getBalance() : account.getBalance();
+        return (account == null) ? AccountState.EMPTY_BALANCE : account.getBalance();
     }
 
     @Override
@@ -468,7 +469,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     @Override
     public synchronized BigInteger getNonce(byte[] addr) {
         AccountState accountState = getAccountState(addr);
-        return accountState == null ? AccountState.EMPTY.getNonce() : accountState.getNonce();
+        return accountState == null ? config.getBlockchainConfig().getCommonConstants().getInitialNonce() : accountState.getNonce();
     }
 
     @Nonnull

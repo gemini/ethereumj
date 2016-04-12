@@ -1,5 +1,6 @@
 package org.ethereum.jsontestsuite.runners;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.db.BlockStoreDummy;
 import org.ethereum.jsontestsuite.Env;
@@ -24,7 +25,7 @@ public class StateTestRunner {
     private static Logger logger = LoggerFactory.getLogger("TCK-Test");
 
     public static List<String> run(StateTestCase stateTestCase2) {
-        return new StateTestRunner(stateTestCase2).runImpl();
+        return new StateTestRunner(SystemProperties.getDefault(), stateTestCase2).runImpl();
     }
 
     protected StateTestCase stateTestCase;
@@ -34,8 +35,10 @@ public class StateTestRunner {
     protected Env env;
     protected ProgramInvokeFactory invokeFactory;
     protected Block block;
+    SystemProperties config;
 
-    public StateTestRunner(StateTestCase stateTestCase) {
+    public StateTestRunner(SystemProperties config, StateTestCase stateTestCase) {
+        this.config = config;
         this.stateTestCase = stateTestCase;
     }
 
@@ -43,7 +46,7 @@ public class StateTestRunner {
         Repository track = repository.startTracking();
 
         TransactionExecutor executor =
-                new TransactionExecutor(transaction, env.getCurrentCoinbase(), track, new BlockStoreDummy(),
+                new TransactionExecutor(config, transaction, env.getCurrentCoinbase(), track, new BlockStoreDummy(),
                         invokeFactory, blockchain.getBestBlock());
 
         try{

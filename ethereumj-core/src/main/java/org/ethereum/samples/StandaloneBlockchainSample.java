@@ -36,10 +36,12 @@ public class StandaloneBlockchainSample {
             "  }" +
             "}";
 
+    private static SystemProperties CONFIG = SystemProperties.getDefault();
+
     public static void main(String[] args) throws Exception {
         // need to modify the default Frontier settings to keep the blocks difficulty
         // low to not waste a lot of time for block mining
-        SystemProperties.CONFIG.setBlockchainConfig(new FrontierConfig(new FrontierConfig.FrontierConstants() {
+        CONFIG.setBlockchainConfig(new FrontierConfig(new FrontierConfig.FrontierConstants() {
             @Override
             public BigInteger getMINIMUM_DIFFICULTY() {
                 return BigInteger.ONE;

@@ -117,7 +117,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     private PendingState pendingState;
 
     @Autowired
-    SystemProperties config = SystemProperties.CONFIG;
+    SystemProperties config;
 
     private List<Chain> altChains = new ArrayList<>();
     private List<Block> garbage = new ArrayList<>();
@@ -148,7 +148,6 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         this.adminInfo = adminInfo;
         this.listener = listener;
         this.parentHeaderValidator = parentHeaderValidator;
-        initConst(SystemProperties.CONFIG);
     }
 
     @PostConstruct
@@ -404,7 +403,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             block.addUncle(uncle);
         }
 
-        block.getHeader().setDifficulty(ByteUtil.bigIntegerToBytes(block.getHeader().calcDifficulty(parent.getHeader())));
+        block.getHeader().setDifficulty(ByteUtil.bigIntegerToBytes(block.getHeader().calcDifficulty(config.getBlockchainConfig(), parent.getHeader())));
 
         pushState(parent.getHash());
 
@@ -451,7 +450,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
                 block.getParentHash())) return false;
 
         if (block.getNumber() >= config.traceStartBlock() && config.traceStartBlock() != -1) {
-            AdvancedDeviceUtils.adjustDetailedTracing(block.getNumber());
+            AdvancedDeviceUtils.adjustDetailedTracing(block.getNumber(), config.traceStartBlock());
         }
 
         List<TransactionReceipt> receipts = processBlock(block);
@@ -735,7 +734,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         for (Transaction tx : block.getTransactionsList()) {
             stateLogger.debug("apply block: [{}] tx: [{}] ", block.getNumber(), i);
 
-            TransactionExecutor executor = new TransactionExecutor(tx, block.getCoinbase(),
+            TransactionExecutor executor = new TransactionExecutor(config, tx, block.getCoinbase(),
                     track, blockStore,
                     programInvokeFactory, block, listener, totalGasUsed);
 

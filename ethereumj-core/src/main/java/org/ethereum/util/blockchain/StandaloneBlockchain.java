@@ -2,6 +2,7 @@ package org.ethereum.util.blockchain;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.CommonConfig;
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.core.genesis.GenesisLoader;
 import org.ethereum.crypto.ECKey;
@@ -68,7 +69,14 @@ public class StandaloneBlockchain implements LocalBlockchain {
 
     List<PendingTx> submittedTxes = new ArrayList<>();
 
+    SystemProperties config;
+
     public StandaloneBlockchain() {
+        this(SystemProperties.getDefault());
+    }
+
+    public StandaloneBlockchain(SystemProperties config) {
+        this.config = config;
         withGenesis(GenesisLoader.loadGenesis(
                 getClass().getResourceAsStream("/genesis/genesis-light.json")));
         withGasPrice(50_000_000_000L);
@@ -351,7 +359,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
 
             try {
                 org.ethereum.core.TransactionExecutor executor = new org.ethereum.core.TransactionExecutor
-                        (tx, callBlock.getCoinbase(), repository, getBlockchain().getBlockStore(),
+                        (config, tx, callBlock.getCoinbase(), repository, getBlockchain().getBlockStore(),
                                 getBlockchain().getProgramInvokeFactory(), callBlock)
                         .setLocalCall(true);
 

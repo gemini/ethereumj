@@ -60,8 +60,6 @@ public class SystemProperties {
     private final static Boolean DEFAULT_VMTEST_LOAD_LOCAL = false;
     private final static String DEFAULT_BLOCKS_LOADER = "";
 
-    public final static SystemProperties CONFIG = new SystemProperties();
-
     /**
      * Marks config accessor methods which need to be called (for value validation)
      * upon config creation or modification
@@ -90,10 +88,6 @@ public class SystemProperties {
     private BlockchainNetConfig blockchainConfig;
     private Genesis genesis;
 
-    public SystemProperties() {
-        this(ConfigFactory.empty());
-    }
-
     public SystemProperties(File configFile) {
         this(ConfigFactory.parseFile(configFile));
     }
@@ -102,7 +96,8 @@ public class SystemProperties {
         this(ConfigFactory.parseResources(configResource));
     }
 
-    public SystemProperties(Config apiConfig) {
+    public static SystemProperties getDefault() {
+        Config config;
         try {
             Config javaSystemProperties = ConfigFactory.load("no-such-resource-only-system-props");
             Config referenceConfig = ConfigFactory.parseResources("ethereumj.conf");
@@ -122,9 +117,8 @@ public class SystemProperties {
             String file = System.getProperty("ethereumj.conf.file");
             Config cmdLineConfigFile = file != null ? ConfigFactory.parseFile(new File(file)) : ConfigFactory.empty();
             logger.info("Config (" + (cmdLineConfigFile.entrySet().size() > 0 ? " yes " : " no  ") + "): user properties from -Dethereumj.conf.file file '" + file + "'");
-            logger.info("Config (" + (apiConfig.entrySet().size() > 0 ? " yes " : " no  ") + "): config passed via constructor");
+
             config = javaSystemProperties
-                    .withFallback(apiConfig)
                     .withFallback(cmdLineConfigFile)
                     .withFallback(testUserConfig)
                     .withFallback(testConfig)
@@ -132,25 +126,38 @@ public class SystemProperties {
                     .withFallback(userDirConfig)
                     .withFallback(cmdLineConfigRes)
                     .withFallback(referenceConfig);
-            validateConfig();
 
             logger.debug("Config trace: " + config.root().render(ConfigRenderOptions.defaults().
                     setComments(false).setJson(false)));
-
-            Properties props = new Properties();
-            InputStream is = getClass().getResourceAsStream("/version.properties");
-            props.load(is);
-            this.projectVersion = props.getProperty("versionNumber");
-            this.projectVersion = this.projectVersion.replaceAll("'", "");
-
-            if (this.projectVersion == null) this.projectVersion = "-.-.-";
-
-            this.projectVersionModifier = "master".equals(BuildInfo.buildBranch) ? "RELEASE" : "SNAPSHOT";
 
         } catch (Exception e) {
             logger.error("Can't read config.", e);
             throw new RuntimeException(e);
         }
+
+        return new SystemProperties(config);
+
+    }
+
+    public SystemProperties(Config apiConfig) {
+        this.config = apiConfig;
+        validateConfig();
+
+        Properties props = new Properties();
+        InputStream is = getClass().getResourceAsStream("/version.properties");
+        try {
+            props.load(is);
+        } catch (IOException e) {
+          throw new RuntimeException("Error loading project version info.");
+        }
+        this.projectVersion = props.getProperty("versionNumber");
+        this.projectVersion = this.projectVersion.replaceAll("'", "");
+
+        if (this.projectVersion == null) this.projectVersion = "-.-.-";
+
+        this.projectVersionModifier = props.getProperty("modifier");
+        this.projectVersionModifier = this.projectVersionModifier.replaceAll("\"", "");
+
     }
 
     public Config getConfig() {

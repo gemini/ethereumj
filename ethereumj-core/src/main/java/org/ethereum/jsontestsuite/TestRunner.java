@@ -1,6 +1,7 @@
 package org.ethereum.jsontestsuite;
 
 import org.ethereum.config.CommonConfig;
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockchainImpl;
 import org.ethereum.core.ImportResult;
@@ -57,6 +58,11 @@ public class TestRunner {
     private ProgramTrace trace = null;
     private boolean setNewStateRoot;
     private String bestStateRoot;
+    private SystemProperties config;
+
+    public TestRunner(SystemProperties config) {
+        this.config = config;
+    }
 
     public List<String> runTestSuite(TestSuite testSuite) {
 
@@ -67,7 +73,7 @@ public class TestRunner {
 
             TestCase testCase = testIterator.next();
 
-            TestRunner runner = new TestRunner();
+            TestRunner runner = new TestRunner(config);
             List<String> result = runner.runTestCase(testCase);
             resultCollector.addAll(result);
         }
@@ -213,7 +219,7 @@ public class TestRunner {
             /* 3. Create Program - exec.code */
             /* 4. run VM */
             VM vm = new VM();
-            Program program = new Program(exec.getCode(), programInvoke);
+            Program program = new Program(config, exec.getCode(), programInvoke);
             boolean vmDidThrowAnEception = false;
             RuntimeException e = null;
             try {

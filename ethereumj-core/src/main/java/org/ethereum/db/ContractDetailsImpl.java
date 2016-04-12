@@ -10,6 +10,7 @@ import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
 import org.ethereum.vm.DataWord;
 import org.spongycastle.util.Arrays;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.*;
 
@@ -53,6 +54,9 @@ public class ContractDetailsImpl extends AbstractContractDetails {
     private void removeKey(byte[] key) {
 //        keys.remove(wrap(key)); // TODO: we can't remove keys , because of fork branching
     }
+
+    @Autowired
+    SystemProperties config;
 
     @Override
     public void put(DataWord key, DataWord value) {
@@ -117,7 +121,7 @@ public class ContractDetailsImpl extends AbstractContractDetails {
             storageTrie.getCache().setDB(getExternalStorageDataSource());
         }
 
-        externalStorage = (storage.getRLPData().length > SystemProperties.CONFIG.detailsInMemoryStorageLimit())
+        externalStorage = (storage.getRLPData().length > config.detailsInMemoryStorageLimit())
                 || externalStorage;
 
         this.rlpEncoded = rlpCode;
