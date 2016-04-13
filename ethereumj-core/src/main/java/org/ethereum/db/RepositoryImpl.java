@@ -52,7 +52,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     private Trie worldState;
 
     private DatabaseImpl detailsDB = null;
-    private DetailsDataStore dds = new DetailsDataStore();
+    private DetailsDataStore dds;
 
     private DatabaseImpl stateDB = null;
 
@@ -66,15 +66,14 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     @Autowired
     SystemProperties config;
 
-    public RepositoryImpl() {
-
-    }
-
-    public RepositoryImpl(boolean createDb) {
+    public RepositoryImpl(SystemProperties config) {
+        this.config = config;
     }
 
     public RepositoryImpl(SystemProperties config, KeyValueDataSource detailsDS, KeyValueDataSource stateDS) {
         this.config = config;
+
+        this.dds = new DetailsDataStore(config);
 
         detailsDS.setName(DETAILS_DB);
         detailsDS.init();
@@ -606,7 +605,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
         trie.setRoot(root);
         trie.setCache(((TrieImpl)(worldState)).getCache());
 
-        RepositoryImpl repo = new RepositoryImpl();
+        RepositoryImpl repo = new RepositoryImpl(config, detailsDS, stateDS);
         repo.worldState = trie;
         repo.stateDB = this.stateDB;
         repo.stateDS = this.stateDS;

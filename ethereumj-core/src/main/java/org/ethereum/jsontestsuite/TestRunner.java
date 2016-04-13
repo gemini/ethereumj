@@ -101,7 +101,7 @@ public class TestRunner {
                 new CommonConfig(config).parentHeaderValidator());
         blockchain.byTest = true;
 
-        PendingStateImpl pendingState = new PendingStateImpl(listener, blockchain);
+        PendingStateImpl pendingState = new PendingStateImpl(config, listener, blockchain);
         pendingState.init();
 
         blockchain.setBestBlock(genesis);
@@ -181,7 +181,7 @@ public class TestRunner {
 
 
         logger.info("--------- PRE ---------");
-        RepositoryImpl repository = loadRepository(new RepositoryVMTestDummy(), testCase.getPre());
+        RepositoryImpl repository = loadRepository(new RepositoryVMTestDummy(config), testCase.getPre());
 
         try {
 

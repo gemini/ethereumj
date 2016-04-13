@@ -82,7 +82,7 @@ public class BlockQueueTest {
         config.setDatabaseReset(false);
 
         MapDBFactory mapDBFactory = new MapDBFactoryImpl(config);
-        blockQueue = new BlockQueueImpl();
+        blockQueue = new BlockQueueImpl(config);
         ((BlockQueueImpl)blockQueue).setMapDBFactory(mapDBFactory);
         blockQueue.open();
 

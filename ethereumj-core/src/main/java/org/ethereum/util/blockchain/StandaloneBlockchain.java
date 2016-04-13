@@ -276,7 +276,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
 
         blockchain.byTest = true;
 
-        PendingStateImpl pendingState = new PendingStateImpl(listener, blockchain);
+        PendingStateImpl pendingState = new PendingStateImpl(config, listener, blockchain);
 
         pendingState.init();
 

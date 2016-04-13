@@ -46,10 +46,9 @@ public class HashStoreTest {
 
         config.setDataBaseDir(testDb);
         config.setDatabaseReset(false);
-//        SystemProperties.CONFIG.overrideParams(SystemProperties.PROPERTY_DB_DIR, testDb);
 
         MapDBFactory mapDBFactory = new MapDBFactoryImpl(config);
-        hashStore = new HashStoreImpl();
+        hashStore = new HashStoreImpl(config);
         ((HashStoreImpl)hashStore).setMapDBFactory(mapDBFactory);
         hashStore.open();
     }

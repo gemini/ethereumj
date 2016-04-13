@@ -1,5 +1,6 @@
 package org.ethereum.db;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
 import org.ethereum.core.Repository;
@@ -26,8 +27,8 @@ public class RepositoryVMTestDummy extends RepositoryImpl{
     private Map<ByteArrayWrapper, AccountState> worldState = new HashMap<>();
     private Map<ByteArrayWrapper, ContractDetails> detailsDB = new HashMap<>();
 
-    public RepositoryVMTestDummy() {
-        super(false);
+    public RepositoryVMTestDummy(SystemProperties config) {
+        super(config);
     }
 
     @Override

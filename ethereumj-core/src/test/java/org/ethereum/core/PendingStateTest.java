@@ -36,9 +36,10 @@ public class PendingStateTest {
 
     private Repository repository;
 
+    private SystemProperties config;
     @Before
     public void setUp() {
-        SystemProperties config = SystemProperties.getDefault();
+        config = SystemProperties.getDefault();
         IndexedBlockStore blockStore = new IndexedBlockStore();
         blockStore.init(new HashMapDB(), new HashMapDB());
 
@@ -47,7 +48,7 @@ public class PendingStateTest {
         EthereumListenerAdapter listener = new EthereumListenerAdapter();
 
         blockchain = new BlockchainImpl(SystemProperties.getDefault(), blockStore, repository, new AdminInfo(), listener, new CommonConfig(config).parentHeaderValidator());
-        PendingStateImpl pendingState = new PendingStateImpl(listener, (BlockchainImpl) blockchain);
+        PendingStateImpl pendingState = new PendingStateImpl(config, listener, (BlockchainImpl) blockchain);
         pendingState.setBlockchain(blockchain);
         pendingState.init();
 
@@ -105,7 +106,7 @@ public class PendingStateTest {
                 getClass().getResourceAsStream("/genesis/genesis-light.json")));
         blockchain.setMinerCoinbase(Hex.decode("ee0250c19ad59305b2bdb61f34b45b72fe37154f"));
 
-        PendingStateImpl pendingState = new PendingStateImpl(new EthereumListenerAdapter(), blockchain);
+        PendingStateImpl pendingState = new PendingStateImpl(config, new EthereumListenerAdapter(), blockchain);
         pendingState.setBlockchain(blockchain);
         pendingState.init();
 

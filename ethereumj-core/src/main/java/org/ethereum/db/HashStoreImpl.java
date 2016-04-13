@@ -39,6 +39,10 @@ public class HashStoreImpl implements HashStore {
     @Autowired
     SystemProperties config;
 
+    public HashStoreImpl(SystemProperties config) {
+        this.config = config;
+    }
+
     @Override
     public void open() {
         new Thread(new Runnable() {

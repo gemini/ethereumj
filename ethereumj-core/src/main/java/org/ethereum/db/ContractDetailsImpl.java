@@ -33,14 +33,13 @@ public class ContractDetailsImpl extends AbstractContractDetails {
     boolean externalStorage;
     private KeyValueDataSource externalStorageDataSource;
 
-    public ContractDetailsImpl() {
+    public ContractDetailsImpl() {}
+
+    public ContractDetailsImpl(SystemProperties config, byte[] rlpCode) {
+        decode(config, rlpCode);
     }
 
-    public ContractDetailsImpl(byte[] rlpCode) {
-        decode(rlpCode);
-    }
-
-    private ContractDetailsImpl(byte[] address, SecureTrie storageTrie, Map<ByteArrayWrapper, byte[]> codes) {
+    private ContractDetailsImpl( byte[] address, SecureTrie storageTrie, Map<ByteArrayWrapper, byte[]> codes) {
         this.address = address;
         this.storageTrie = storageTrie;
         setCodes(codes);
@@ -53,9 +52,6 @@ public class ContractDetailsImpl extends AbstractContractDetails {
     private void removeKey(byte[] key) {
 //        keys.remove(wrap(key)); // TODO: we can't remove keys , because of fork branching
     }
-
-    @Autowired
-    SystemProperties config;
 
     @Override
     public void put(DataWord key, DataWord value) {
@@ -90,7 +86,7 @@ public class ContractDetailsImpl extends AbstractContractDetails {
     }
 
     @Override
-    public void decode(byte[] rlpCode) {
+    public void decode(SystemProperties config, byte[] rlpCode) {
         RLPList data = RLP.decode2(rlpCode);
         RLPList rlpList = (RLPList) data.get(0);
 

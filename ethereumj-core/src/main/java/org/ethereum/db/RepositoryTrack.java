@@ -38,10 +38,6 @@ public class RepositoryTrack implements Repository {
     Repository repository;
     SystemProperties config;
 
-    public RepositoryTrack() {
-        this.repository = new RepositoryDummy();
-    }
-
     public RepositoryTrack(Repository repository, SystemProperties config) {
         this.repository = repository;
         this.config = config;

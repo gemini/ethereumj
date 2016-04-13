@@ -52,6 +52,10 @@ public class BlockQueueImpl implements BlockQueue {
     @Autowired
     SystemProperties config;
 
+    public BlockQueueImpl(SystemProperties config) {
+        this.config = config;
+    }
+
     @Override
     public void open() {
         new Thread(new Runnable() {

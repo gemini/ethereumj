@@ -32,8 +32,11 @@ public class RedisConnectionImpl implements RedisConnection {
 
     private JedisPool jedisPool;
 
+    private Serializers serializers;
+
     public RedisConnectionImpl(SystemProperties config) {
         this.config = config;
+        this.serializers = new Serializers(config);
     }
 
     @PostConstruct
@@ -100,12 +103,12 @@ public class RedisConnectionImpl implements RedisConnection {
 
     @Override
     public <T> Set<T> createSetFor(Class<T> clazz, String name) {
-        return new RedisSet<T>(name, jedisPool, Serializers.forClass(clazz));
+        return new RedisSet<T>(name, jedisPool, serializers.forClass(clazz));
     }
     
     @Override
     public <K,V> Map<K, V> createMapFor(Class<K> keyClass, Class<V> valueClass, String name) {
-        return new RedisMap<K, V>(name, jedisPool, Serializers.forClass(keyClass), Serializers.forClass(valueClass));     
+        return new RedisMap<K, V>(name, jedisPool, serializers.forClass(keyClass), serializers.forClass(valueClass));
     }
 
     @Override
