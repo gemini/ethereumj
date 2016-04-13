@@ -40,9 +40,18 @@ public class CommonConfig {
     SystemProperties config;
 
 
+    public CommonConfig(SystemProperties config) {
+        this(config, null, null);
+    }
+
+    public CommonConfig(SystemProperties config, RedisConnection redisConnection, MapDBFactory mapDBFactory) {
+        this.config = config;
+        this.redisConnection = redisConnection;
+        this.mapDBFactory = mapDBFactory;
+    }
     @Bean
     Repository repository() {
-        return new RepositoryImpl(keyValueDataSource(), keyValueDataSource());
+        return new RepositoryImpl(config, keyValueDataSource(), keyValueDataSource());
     }
 
     @Bean
@@ -164,7 +173,7 @@ public class CommonConfig {
         List<DependentBlockHeaderRule> rules = new ArrayList<>(asList(
                 new ParentNumberRule(),
                 new DifficultyRule(config.getBlockchainConfig()),
-                new ParentGasLimitRule()
+                new ParentGasLimitRule(config.getBlockchainConfig())
         ));
 
         return new ParentBlockHeaderValidator(rules);

@@ -73,7 +73,8 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     public RepositoryImpl(boolean createDb) {
     }
 
-    public RepositoryImpl(KeyValueDataSource detailsDS, KeyValueDataSource stateDS) {
+    public RepositoryImpl(SystemProperties config, KeyValueDataSource detailsDS, KeyValueDataSource stateDS) {
+        this.config = config;
 
         detailsDS.setName(DETAILS_DB);
         detailsDS.init();
@@ -609,6 +610,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
         repo.worldState = trie;
         repo.stateDB = this.stateDB;
         repo.stateDS = this.stateDS;
+        repo.config = this.config;
 
         repo.detailsDB = this.detailsDB;
         repo.detailsDS = this.detailsDS;

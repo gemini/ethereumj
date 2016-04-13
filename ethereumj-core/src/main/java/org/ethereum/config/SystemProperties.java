@@ -79,7 +79,7 @@ public class SystemProperties {
 
     static {
         Properties props = new Properties();
-        InputStream is = SystemProperties.class.getClassLoader().getResourceAsStream("/version.properties");
+        InputStream is = SystemProperties.class.getResourceAsStream("/version.properties");
         try {
             props.load(is);
         } catch (IOException e) {

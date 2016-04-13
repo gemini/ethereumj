@@ -343,7 +343,7 @@ public class ImportLightTest {
         IndexedBlockStore blockStore = new IndexedBlockStore();
         blockStore.init(new HashMapDB(), new HashMapDB());
 
-        Repository repository = new RepositoryImpl(new HashMapDB(), new HashMapDB());
+        Repository repository = new RepositoryImpl(config, new HashMapDB(), new HashMapDB());
 
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
         EthereumListenerAdapter listener = new EthereumListenerAdapter();
@@ -354,7 +354,7 @@ public class ImportLightTest {
                 repository,
                 new AdminInfo(),
                 listener,
-                new CommonConfig().parentHeaderValidator()
+                new CommonConfig(config).parentHeaderValidator()
         );
         blockchain.setParentHeaderValidator(new DependentBlockHeaderRuleAdapter());
         blockchain.setProgramInvokeFactory(programInvokeFactory);

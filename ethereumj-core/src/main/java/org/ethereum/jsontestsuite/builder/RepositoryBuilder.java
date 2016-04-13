@@ -1,5 +1,6 @@
 package org.ethereum.jsontestsuite.builder;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.AccountState;
 import org.ethereum.datasource.HashMapDB;
 import org.ethereum.db.*;
@@ -34,7 +35,7 @@ public class RepositoryBuilder {
             detailsBatch.put(wrap(parseData(address)), detailsCache);
         }
 
-        RepositoryImpl repositoryDummy = new RepositoryImpl(new HashMapDB().setClearOnClose(false),
+        RepositoryImpl repositoryDummy = new RepositoryImpl(SystemProperties.getDefault(), new HashMapDB().setClearOnClose(false),
                 new HashMapDB().setClearOnClose(false));
         Repository track = repositoryDummy.startTracking();
         track.updateBatch(stateBatch, detailsBatch);
