@@ -43,9 +43,10 @@ public class BlockStressTest {
 
     @Before
     public void setup() {
-        SystemProperties.CONFIG.setDataBaseDir(TEST_DB_DIR);
+        SystemProperties config = SystemProperties.getDefault();
+        config.setDataBaseDir(TEST_DB_DIR);
 
-        mapDBFactory = new MapDBFactoryImpl();
+        mapDBFactory = new MapDBFactoryImpl(config);
         blockSourceDB = mapDBFactory.createDB(BLOCK_SOURCE);
         blockSource = blockSourceDB.hashMapCreate(BLOCK_SOURCE)
                 .keySerializer(Serializer.BYTE_ARRAY)

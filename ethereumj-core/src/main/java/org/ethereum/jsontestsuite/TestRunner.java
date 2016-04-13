@@ -97,7 +97,7 @@ public class TestRunner {
         EthereumListener listener = new CompositeEthereumListener();
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
 
-        BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository, adminInfo, listener,
+        BlockchainImpl blockchain = new BlockchainImpl(config, blockStore, repository, adminInfo, listener,
                 new CommonConfig().parentHeaderValidator());
         blockchain.byTest = true;
 

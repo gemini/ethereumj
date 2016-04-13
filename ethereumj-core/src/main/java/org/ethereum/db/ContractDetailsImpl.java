@@ -15,7 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.util.*;
 
 import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
-import static org.ethereum.datasource.DataSourcePool.levelDbByName;
 import static org.ethereum.util.ByteUtil.*;
 
 /**
@@ -232,7 +231,7 @@ public class ContractDetailsImpl extends AbstractContractDetails {
 
     private KeyValueDataSource getExternalStorageDataSource() {
         if (externalStorageDataSource == null) {
-            externalStorageDataSource = levelDbByName("details-storage/" + toHexString(address));
+//            externalStorageDataSource = levelDbByName("details-storage/" + toHexString(address));
         }
         return externalStorageDataSource;
     }

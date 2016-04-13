@@ -1,5 +1,6 @@
 package org.ethereum.db;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Genesis;
 import org.ethereum.crypto.HashUtil;
 
@@ -30,6 +31,8 @@ import static org.junit.Assert.*;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class RepositoryTest {
 
+
+    SystemProperties config = SystemProperties.getDefault();
 
     @Test
     public void test1() {
@@ -417,7 +420,7 @@ public class RepositoryTest {
         Repository repository = new RepositoryImpl(new HashMapDB(), new HashMapDB());
         Repository track = repository.startTracking();
 
-        Genesis genesis = (Genesis)Genesis.getInstance();
+        Genesis genesis = (Genesis)config.getGenesis();
         for (ByteArrayWrapper key : genesis.getPremine().keySet()) {
             repository.createAccount(key.getData());
             repository.addBalance(key.getData(), genesis.getPremine().get(key).getBalance());
@@ -425,7 +428,7 @@ public class RepositoryTest {
 
         track.commit();
 
-        assertArrayEquals(Genesis.getInstance().getStateRoot(), repository.getRoot());
+        assertArrayEquals(config.getGenesis().getStateRoot(), repository.getRoot());
 
         repository.close();
     }

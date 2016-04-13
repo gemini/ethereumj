@@ -32,6 +32,10 @@ public class RedisConnectionImpl implements RedisConnection {
 
     private JedisPool jedisPool;
 
+    public RedisConnectionImpl(SystemProperties config) {
+        this.config = config;
+    }
+
     @PostConstruct
     public void tryConnect() {
         if (!config.isRedisEnabled()) return;

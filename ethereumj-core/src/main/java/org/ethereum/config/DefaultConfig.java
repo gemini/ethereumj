@@ -69,8 +69,4 @@ public class DefaultConfig {
         return indexedBlockStore;
     }
 
-    @Bean @Scope("prototype")
-    LevelDbDataSource levelDbDataSource(String name) {
-        return new LevelDbDataSource(name);
-    }
 }

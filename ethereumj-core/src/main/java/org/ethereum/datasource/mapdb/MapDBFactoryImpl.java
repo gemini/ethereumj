@@ -21,6 +21,10 @@ public class MapDBFactoryImpl implements MapDBFactory {
     @Autowired
     SystemProperties config;
 
+    public MapDBFactoryImpl(SystemProperties config) {
+        this.config = config;
+    }
+
     @Override
     public KeyValueDataSource createDataSource() {
         return ctx.getBean(MapDBDataSource.class);

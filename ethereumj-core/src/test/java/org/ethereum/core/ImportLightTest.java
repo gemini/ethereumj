@@ -32,9 +32,11 @@ import java.util.Collections;
  */
 public class ImportLightTest {
 
+    static SystemProperties config = SystemProperties.getDefault();
+
     @BeforeClass
     public static void setup() {
-        SystemProperties.CONFIG.setBlockchainConfig(new FrontierConfig(new FrontierConfig.FrontierConstants() {
+        config.setBlockchainConfig(new FrontierConfig(new FrontierConfig.FrontierConstants() {
             @Override
             public BigInteger getMINIMUM_DIFFICULTY() {
                 return BigInteger.ONE;
@@ -42,15 +44,10 @@ public class ImportLightTest {
         }));
     }
 
-    @AfterClass
-    public static void cleanup() {
-        SystemProperties.CONFIG.setBlockchainConfig(MainNetConfig.INSTANCE);
-    }
-
     @Test
     public void createFork() throws Exception {
         // importing forked chain
-        BlockchainImpl blockchain = createBlockchain(GenesisLoader.loadGenesis(
+        BlockchainImpl blockchain = createBlockchain(config, GenesisLoader.loadGenesis(
                 getClass().getResourceAsStream("/genesis/genesis-light.json")));
         blockchain.setMinerCoinbase(Hex.decode("ee0250c19ad59305b2bdb61f34b45b72fe37154f"));
         Block parent = blockchain.getBestBlock();
@@ -96,7 +93,7 @@ public class ImportLightTest {
     public void doubleTransactionTest() throws Exception {
         // Testing that blocks containing tx with invalid nonce are rejected
 
-        BlockchainImpl blockchain = createBlockchain(GenesisLoader.loadGenesis(
+        BlockchainImpl blockchain = createBlockchain(config, GenesisLoader.loadGenesis(
                 getClass().getResourceAsStream("/genesis/genesis-light.json")));
         blockchain.setMinerCoinbase(Hex.decode("ee0250c19ad59305b2bdb61f34b45b72fe37154f"));
         Block parent = blockchain.getBestBlock();
@@ -342,7 +339,7 @@ public class ImportLightTest {
     }
 
 
-    public static BlockchainImpl createBlockchain(Genesis genesis) {
+    public static BlockchainImpl createBlockchain(SystemProperties config, Genesis genesis) {
         IndexedBlockStore blockStore = new IndexedBlockStore();
         blockStore.init(new HashMapDB(), new HashMapDB());
 
@@ -352,6 +349,7 @@ public class ImportLightTest {
         EthereumListenerAdapter listener = new EthereumListenerAdapter();
 
         BlockchainImpl blockchain = new BlockchainImpl(
+                config,
                 blockStore,
                 repository,
                 new AdminInfo(),

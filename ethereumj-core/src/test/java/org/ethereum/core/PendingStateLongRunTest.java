@@ -1,6 +1,7 @@
 package org.ethereum.core;
 
 import org.ethereum.config.CommonConfig;
+import org.ethereum.config.SystemProperties;
 import org.ethereum.datasource.HashMapDB;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.IndexedBlockStore;
@@ -40,10 +41,12 @@ public class PendingStateLongRunTest {
 
     private List<String> strData;
 
+    private SystemProperties config = SystemProperties.getDefault();
+
     @Before
     public void setup() throws URISyntaxException, IOException, InterruptedException {
 
-        blockchain = createBlockchain((Genesis) Genesis.getInstance());
+        blockchain = createBlockchain((Genesis) config.getGenesis());
         pendingState = ((BlockchainImpl) blockchain).getPendingState();
 
         URL blocks = ClassLoader.getSystemResource("state/47250.dmp");
@@ -112,6 +115,7 @@ public class PendingStateLongRunTest {
         EthereumListenerAdapter listener = new EthereumListenerAdapter();
 
         BlockchainImpl blockchain = new BlockchainImpl(
+                config,
                 blockStore,
                 repository,
                 new AdminInfo(),
@@ -139,10 +143,10 @@ public class PendingStateLongRunTest {
 
         track.commit();
 
-        blockStore.saveBlock(Genesis.getInstance(), Genesis.getInstance().getCumulativeDifficulty(), true);
-
-        blockchain.setBestBlock(Genesis.getInstance());
-        blockchain.setTotalDifficulty(Genesis.getInstance().getCumulativeDifficulty());
+        blockStore.saveBlock(config.getGenesis(), config.getGenesis().getCumulativeDifficulty(), true);
+        
+        blockchain.setBestBlock(config.getGenesis());
+        blockchain.setTotalDifficulty(config.getGenesis().getCumulativeDifficulty());
 
         return blockchain;
     }

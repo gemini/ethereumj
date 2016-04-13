@@ -267,6 +267,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
         EthereumListenerAdapter listener = new EthereumListenerAdapter();
 
         BlockchainImpl blockchain = new BlockchainImpl(
+                config,
                 blockStore,
                 repository,
                 new AdminInfo(),

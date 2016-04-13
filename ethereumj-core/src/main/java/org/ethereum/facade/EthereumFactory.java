@@ -42,7 +42,7 @@ public class EthereumFactory {
 
     public static Ethereum createEthereum(SystemProperties config, Class userSpringConfig) {
 
-        logger.info("Running {},  core version: {}-{}", config.genesisInfo(), config.projectVersion(), config.projectVersionModifier());
+        logger.info("Running {},  core version: {}-{}", config.genesisInfo(), SystemProperties.projectVersion(), SystemProperties.projectVersionModifier());
         BuildInfo.printInfo();
 
         if (config.databaseReset()){

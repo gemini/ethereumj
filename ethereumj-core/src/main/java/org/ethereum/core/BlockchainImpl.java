@@ -141,13 +141,15 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     }
 
     //todo: autowire over constructor
-    public BlockchainImpl(BlockStore blockStore, Repository repository, AdminInfo adminInfo,
+    public BlockchainImpl(SystemProperties config, BlockStore blockStore, Repository repository, AdminInfo adminInfo,
                           EthereumListener listener, ParentBlockHeaderValidator parentHeaderValidator) {
+        this.config = config;
         this.blockStore = blockStore;
         this.repository = repository;
         this.adminInfo = adminInfo;
         this.listener = listener;
         this.parentHeaderValidator = parentHeaderValidator;
+        init();
     }
 
     @PostConstruct

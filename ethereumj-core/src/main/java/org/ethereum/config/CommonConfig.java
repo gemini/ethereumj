@@ -58,7 +58,7 @@ public class CommonConfig {
             }
 
             dataSource = "leveldb";
-            return new LevelDbDataSource();
+            return new LevelDbDataSource(config);
         } finally {
             logger.info(dataSource + " key-value data source created.");
         }

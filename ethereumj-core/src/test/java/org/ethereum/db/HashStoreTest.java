@@ -42,11 +42,13 @@ public class HashStoreTest {
 
         BigInteger bi = new BigInteger(32, new Random());
         testDb = "test_db_" + bi;
-        SystemProperties.CONFIG.setDataBaseDir(testDb);
-        SystemProperties.CONFIG.setDatabaseReset(false);
+        SystemProperties config = SystemProperties.getDefault();
+
+        config.setDataBaseDir(testDb);
+        config.setDatabaseReset(false);
 //        SystemProperties.CONFIG.overrideParams(SystemProperties.PROPERTY_DB_DIR, testDb);
 
-        MapDBFactory mapDBFactory = new MapDBFactoryImpl();
+        MapDBFactory mapDBFactory = new MapDBFactoryImpl(config);
         hashStore = new HashStoreImpl();
         ((HashStoreImpl)hashStore).setMapDBFactory(mapDBFactory);
         hashStore.open();

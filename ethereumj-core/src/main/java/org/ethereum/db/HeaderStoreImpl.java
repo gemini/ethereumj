@@ -42,6 +42,10 @@ public class HeaderStoreImpl implements HeaderStore {
     @Autowired
     SystemProperties config;
 
+    public HeaderStoreImpl(SystemProperties config) {
+        this.config = config;
+    }
+
     @Override
     public void open() {
         new Thread(new Runnable() {

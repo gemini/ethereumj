@@ -49,10 +49,12 @@ public class LevelDbDataSource implements KeyValueDataSource {
     // however blocks them on init/close/delete operations
     private ReadWriteLock resetDbLock = new ReentrantReadWriteLock();
 
-    public LevelDbDataSource() {
+    public LevelDbDataSource(SystemProperties config) {
+        this.config = config;
     }
 
-    public LevelDbDataSource(String name) {
+    public LevelDbDataSource(SystemProperties config, String name) {
+        this(config);
         this.name = name;
         logger.info("New LevelDbDataSource: " + name);
     }
