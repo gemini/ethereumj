@@ -71,10 +71,6 @@ public class StandaloneBlockchain implements LocalBlockchain {
 
     SystemProperties config;
 
-    public StandaloneBlockchain() {
-        this(SystemProperties.getDefault());
-    }
-
     public StandaloneBlockchain(SystemProperties config) {
         this.config = config;
         withGenesis(GenesisLoader.loadGenesis(

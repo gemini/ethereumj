@@ -206,7 +206,7 @@ public class ImportLightTest {
                 "  }" +
                 "}";
 
-        StandaloneBlockchain bc = new StandaloneBlockchain();
+        StandaloneBlockchain bc = new StandaloneBlockchain(config);
         SolidityContract parent = bc.submitNewContract(contractSrc, "Parent");
         Block b1 = bc.createBlock();
         Block b2 = bc.createBlock();
@@ -239,7 +239,7 @@ public class ImportLightTest {
                 "}";
 
         {
-            StandaloneBlockchain bc = new StandaloneBlockchain();
+            StandaloneBlockchain bc = new StandaloneBlockchain(config);
             Block b1 = bc.createBlock();
             Block b2 = bc.createBlock();
             SolidityContract a = bc.submitNewContract(contractSrc, "A");
@@ -272,7 +272,7 @@ public class ImportLightTest {
                 "        child = (new B).value(20)();" +
                 "    }" +
                 "}";
-        StandaloneBlockchain bc = new StandaloneBlockchain().withAutoblock(true);
+        StandaloneBlockchain bc = new StandaloneBlockchain(config).withAutoblock(true);
         SolidityContract a = bc.submitNewContract(contract, "A");
         bc.sendEther(a.getAddress(), BigInteger.valueOf(10000));
         a.callFunction(10, "create");
@@ -298,7 +298,7 @@ public class ImportLightTest {
                 "  }" +
                 "}";
 
-        StandaloneBlockchain bc = new StandaloneBlockchain();
+        StandaloneBlockchain bc = new StandaloneBlockchain(config);
         Block b1 = bc.createBlock();
         SolidityContract a = bc.submitNewContract(contractA);
         Block b2 = bc.createBlock();
@@ -327,7 +327,7 @@ public class ImportLightTest {
                 "  }" +
                 "}";
 
-        StandaloneBlockchain bc = new StandaloneBlockchain().withGasPrice(1);
+        StandaloneBlockchain bc = new StandaloneBlockchain(config).withGasPrice(1);
         SolidityContract a = bc.submitNewContract(contractA, "A");
         bc.createBlock();
         BigInteger balance1 = bc.getBlockchain().getRepository().getBalance(bc.getSender().getAddress());

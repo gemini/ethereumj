@@ -50,7 +50,7 @@ public class StandaloneBlockchainSample {
 
         // Creating a blockchain which generates a new block for each transaction
         // just not to call createBlock() after each call transaction
-        StandaloneBlockchain bc = new StandaloneBlockchain().withAutoblock(true);
+        StandaloneBlockchain bc = new StandaloneBlockchain(CONFIG).withAutoblock(true);
         System.out.println("Creating first empty block (need some time to generate DAG)...");
         // warning up the block miner just to understand how long
         // the initial miner dataset is generated
