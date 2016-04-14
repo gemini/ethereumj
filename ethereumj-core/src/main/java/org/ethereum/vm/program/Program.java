@@ -399,7 +399,7 @@ public class Program {
         ProgramResult result = ProgramResult.empty();
         if (isNotEmpty(programCode)) {
 
-            VM vm = new VM();
+            VM vm = newVM();
             Program program = new Program(config, programCode, programInvoke, internalTx);
             vm.play(program);
             result = program.getResult();
@@ -454,6 +454,10 @@ public class Program {
                         refundGas);
             }
         }
+    }
+
+    private VM newVM() {
+        return new VM(config);
     }
 
     /**
@@ -521,7 +525,7 @@ public class Program {
                     msg.getType() == MsgType.DELEGATECALL ? getCallValue() : msg.getEndowment(),
                     msg.getGas(), contextBalance, data, track, this.invoke.getBlockStore(), byTestingSuite());
 
-            VM vm = new VM();
+            VM vm = newVM();
             Program program = new Program(config, programCode, programInvoke, internalTx);
             vm.play(program);
             result = program.getResult();

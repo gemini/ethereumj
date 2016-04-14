@@ -17,13 +17,13 @@ import static org.ethereum.util.Utils.unifiedNumericToBigInteger;
 
 public class AccountBuilder {
 
-    public static StateWrap build(AccountTck account) {
+    public static StateWrap build(SystemProperties config, AccountTck account) {
 
         ContractDetailsImpl details = new ContractDetailsImpl();
         details.setCode(parseData(account.getCode()));
         details.setStorage(convertStorage(account.getStorage()));
 
-        AccountState state = new AccountState(SystemProperties.getDefault().getBlockchainConfig());
+        AccountState state = new AccountState(config.getBlockchainConfig());
 
         state.addToBalance(unifiedNumericToBigInteger(account.getBalance()));
         state.setNonce(unifiedNumericToBigInteger(account.getNonce()));

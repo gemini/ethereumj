@@ -79,7 +79,7 @@ public class VMComplexTest {
         repository.addStorageRow(contractAddrB, key1, value1);
 
         // Play the program
-        VM vm = new VM();
+        VM vm = newVM();
         Program program = new Program(config, codeB, pi);
 
         try {
@@ -101,6 +101,10 @@ public class VMComplexTest {
 
         repository.close();
         assertEquals(expectedGas, program.getResult().getGasUsed());
+    }
+
+    private VM newVM() {
+        return new VM(config);
     }
 
     @Ignore //TODO #POC9
@@ -163,7 +167,7 @@ public class VMComplexTest {
         // ****************** //
         //  Play the program  //
         // ****************** //
-        VM vm = new VM();
+        VM vm = newVM();
         Program program = new Program(config, codeB, pi);
 
         try {
@@ -251,7 +255,7 @@ public class VMComplexTest {
         // ****************** //
         //  Play the program  //
         // ****************** //
-        VM vm = new VM();
+        VM vm = newVM();
         Program program = new Program(config, codeB, pi);
 
         try {
@@ -329,7 +333,7 @@ public class VMComplexTest {
         // ****************** //
         //  Play the program  //
         // ****************** //
-        VM vm = new VM();
+        VM vm = newVM();
         Program program = new Program(config, codeA, pi);
 
         try {
@@ -401,7 +405,7 @@ public class VMComplexTest {
         // ****************** //
         //  Play the program  //
         // ****************** //
-        VM vm = new VM();
+        VM vm = newVM();
         Program program = new Program(config, codeB, pi);
 
         try {
@@ -465,7 +469,7 @@ public class VMComplexTest {
         repository.addStorageRow(contractAddrB, key1, value1);
 
         // Play the program
-        VM vm = new VM();
+        VM vm = newVM();
         Program program = new Program(config, codeB, pi);
 
         try {
@@ -524,7 +528,7 @@ public class VMComplexTest {
         repository.addStorageRow(contractAddrB, key1, value1);
 
         // Play the program
-        VM vm = new VM();
+        VM vm = newVM();
         Program program = new Program(config, codeB, pi);
 
         try {
@@ -583,7 +587,7 @@ public class VMComplexTest {
         repository.addStorageRow(contractAddrB, key1, value1);
 
         // Play the program
-        VM vm = new VM();
+        VM vm = newVM();
         Program program = new Program(config, codeB, pi);
 
         try {
@@ -642,7 +646,7 @@ public class VMComplexTest {
         repository.addStorageRow(contractAddrB, key1, value1);
 
         // Play the program
-        VM vm = new VM();
+        VM vm = newVM();
         Program program = new Program(config, codeB, pi);
 
         try {

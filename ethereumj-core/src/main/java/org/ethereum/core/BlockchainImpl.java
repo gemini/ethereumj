@@ -137,7 +137,8 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
     private Stack<State> stateStack = new Stack<>();
 
-    public BlockchainImpl() {
+    public BlockchainImpl(SystemProperties config) {
+        this.config = config;
     }
 
     //todo: autowire over constructor

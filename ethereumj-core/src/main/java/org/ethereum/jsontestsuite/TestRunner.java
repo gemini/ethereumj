@@ -87,7 +87,7 @@ public class TestRunner {
 
         /* 1 */ // Create genesis + init pre state
         Block genesis = BlockBuilder.build(testCase.getGenesisBlockHeader(), null, null);
-        Repository repository = RepositoryBuilder.build(testCase.getPre());
+        Repository repository = RepositoryBuilder.build(config, testCase.getPre());
 
         IndexedBlockStore blockStore = new IndexedBlockStore();
         blockStore.init(new HashMapDB(), new HashMapDB());
@@ -164,7 +164,7 @@ public class TestRunner {
             results.add(formattedString);
         }
 
-        Repository postRepository = RepositoryBuilder.build(testCase.getPostState());
+        Repository postRepository = RepositoryBuilder.build(config, testCase.getPostState());
         List<String> repoResults = RepositoryValidator.valid(repository, postRepository);
         results.addAll(repoResults);
 
@@ -218,7 +218,7 @@ public class TestRunner {
 
             /* 3. Create Program - exec.code */
             /* 4. run VM */
-            VM vm = new VM();
+            VM vm = new VM(config);
             Program program = new Program(config, exec.getCode(), programInvoke);
             boolean vmDidThrowAnEception = false;
             RuntimeException e = null;

@@ -1,5 +1,6 @@
 package org.ethereum.vm;
 
+import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.vm.MessageCall.MsgType;
@@ -77,11 +78,10 @@ public class VM {
 
     private static VMHook vmHook;
 
-    @Autowired
     SystemProperties config;
 
-    @PostConstruct
-    private void loadFromConfig() {
+    public VM(SystemProperties config) {
+        this.config = config;
         vmTrace = config.vmTrace();
         dumpBlock = config.dumpBlock();
     }
@@ -103,6 +103,9 @@ public class VM {
             }
             if (op == DELEGATECALL) {
                 // opcode since Homestead release only
+                config.getBlockchainConfig();
+                program.getNumber();
+                program.getNumber().longValue();
                 if (!config.getBlockchainConfig().getConfigForBlock(program.getNumber().longValue()).
                         getConstants().hasDelegateCallOpcode()) {
                     throw Program.Exception.invalidOpCode(program.getCurrentOp());

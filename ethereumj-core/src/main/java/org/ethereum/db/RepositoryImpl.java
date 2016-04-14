@@ -144,6 +144,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     public synchronized void updateBatch(HashMap<ByteArrayWrapper, AccountState> stateCache,
                             HashMap<ByteArrayWrapper, ContractDetails> detailsCache) {
 
+
         logger.trace("updatingBatch: detailsCache.size: {}", detailsCache.size());
 
         for (ByteArrayWrapper hash : stateCache.keySet()) {
@@ -300,7 +301,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
             JsonNodeFactory jsonFactory = new JsonNodeFactory(false);
             ObjectNode blockNode = jsonFactory.objectNode();
 
-            JSONHelper.dumpBlock(blockNode, block, gasUsed,
+            JSONHelper.dumpBlock(config.getBlockchainConfig(), blockNode, block, gasUsed,
                     this.getRoot(),
                     keys, this);
 

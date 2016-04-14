@@ -66,13 +66,13 @@ public class StateTestRunner {
     public List<String> runImpl() {
 
         logger.info("");
-        repository = RepositoryBuilder.build(stateTestCase.getPre());
+        repository = RepositoryBuilder.build(config, stateTestCase.getPre());
         logger.info("loaded repository");
 
         transaction = TransactionBuilder.build(stateTestCase.getTransaction());
         logger.info("transaction: {}", transaction.toString());
 
-        blockchain = new BlockchainImpl();
+        blockchain = new BlockchainImpl(config);
         blockchain.setRepository(repository);
 
         env = EnvBuilder.build(stateTestCase.getEnv());
@@ -93,7 +93,7 @@ public class StateTestRunner {
 
         List<String> logsResult = LogsValidator.valid(origLogs, postLogs);
 
-        Repository postRepository = RepositoryBuilder.build(stateTestCase.getPost());
+        Repository postRepository = RepositoryBuilder.build(config, stateTestCase.getPost());
         List<String> repoResults = RepositoryValidator.valid(repository, postRepository);
 
         logger.info("--------- POST Validation---------");
@@ -101,9 +101,17 @@ public class StateTestRunner {
                 OutputValidator.valid(Hex.toHexString(programResult.getHReturn()), stateTestCase.getOut());
 
         List<String> results = new ArrayList<>();
+
         results.addAll(repoResults);
         results.addAll(logsResult);
         results.addAll(outputResults);
+
+        if (results.size() > 0 && programResult.getException() != null) {
+            RuntimeException e = programResult.getException();
+            StackTraceElement at = e.getStackTrace()[0];
+            String error = String.format("Additionally, there was an error while executing the program: %s at %s", e, at);
+            results.add(error);
+        }
 
         for (String result : results) {
             logger.error(result);

@@ -153,7 +153,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
                 txes.add(transaction);
             }
             Block b = getBlockchain().createNewBlock(parent, txes, Collections.EMPTY_LIST);
-            Ethash.getForBlock(b.getNumber()).mineLight(b).get();
+            Ethash.getForBlock(b.getNumber(), config).mineLight(b).get();
             ImportResult importResult = getBlockchain().tryToConnect(b);
             if (importResult != ImportResult.IMPORTED_BEST && importResult != ImportResult.IMPORTED_NOT_BEST) {
                 throw new RuntimeException("Invalid block import result " + importResult + " for block " + b);

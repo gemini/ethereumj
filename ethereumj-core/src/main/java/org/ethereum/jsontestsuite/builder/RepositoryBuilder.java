@@ -15,14 +15,14 @@ import static org.ethereum.util.ByteUtil.wrap;
 
 public class RepositoryBuilder {
 
-    public static Repository build(Map<String, AccountTck> accounts){
+    public static Repository build(SystemProperties config, Map<String, AccountTck> accounts){
         HashMap<ByteArrayWrapper, AccountState> stateBatch = new HashMap<>();
         HashMap<ByteArrayWrapper, ContractDetails> detailsBatch = new HashMap<>();
 
         for (String address : accounts.keySet()) {
 
             AccountTck accountTCK = accounts.get(address);
-            AccountBuilder.StateWrap stateWrap = AccountBuilder.build(accountTCK);
+            AccountBuilder.StateWrap stateWrap = AccountBuilder.build(config, accountTCK);
 
             AccountState state = stateWrap.getAccountState();
             ContractDetails details = stateWrap.getContractDetails();
@@ -35,7 +35,7 @@ public class RepositoryBuilder {
             detailsBatch.put(wrap(parseData(address)), detailsCache);
         }
 
-        RepositoryImpl repositoryDummy = new RepositoryImpl(SystemProperties.getDefault(), new HashMapDB().setClearOnClose(false),
+        RepositoryImpl repositoryDummy = new RepositoryImpl(config, new HashMapDB().setClearOnClose(false),
                 new HashMapDB().setClearOnClose(false));
         Repository track = repositoryDummy.startTracking();
         track.updateBatch(stateBatch, detailsBatch);

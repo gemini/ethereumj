@@ -159,7 +159,6 @@ public class TransactionExecutor {
     }
 
     public void execute() {
-
         if (!readyToExecute) return;
 
         if (!localCall) {
@@ -215,7 +214,7 @@ public class TransactionExecutor {
                 ProgramInvoke programInvoke =
                         programInvokeFactory.createProgramInvoke(tx, currentBlock, cacheTrack, blockStore);
 
-                this.vm = new VM();
+                this.vm = new VM(config);
                 this.program = new Program(config, code, programInvoke, tx);
             }
         }
@@ -232,7 +231,7 @@ public class TransactionExecutor {
         } else {
             ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(tx, currentBlock, cacheTrack, blockStore);
 
-            this.vm = new VM();
+            this.vm = new VM(config);
             this.program = new Program(config, tx.getData(), programInvoke, tx);
 
             // reset storage if the contract with the same address already exists
