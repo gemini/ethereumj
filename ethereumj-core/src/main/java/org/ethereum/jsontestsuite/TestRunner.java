@@ -98,7 +98,7 @@ public class TestRunner {
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
 
         BlockchainImpl blockchain = new BlockchainImpl(config, blockStore, repository, adminInfo, listener,
-                new CommonConfig(config).parentHeaderValidator());
+                new CommonConfig(config, null, null).parentHeaderValidator());
         blockchain.byTest = true;
 
         PendingStateImpl pendingState = new PendingStateImpl(config, listener, blockchain);

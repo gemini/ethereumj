@@ -47,7 +47,7 @@ public class PendingStateTest {
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
         EthereumListenerAdapter listener = new EthereumListenerAdapter();
 
-        blockchain = new BlockchainImpl(SystemProperties.getDefault(), blockStore, repository, new AdminInfo(), listener, new CommonConfig(config).parentHeaderValidator());
+        blockchain = new BlockchainImpl(SystemProperties.getDefault(), blockStore, repository, new AdminInfo(), listener, new CommonConfig(config, null, null).parentHeaderValidator());
         PendingStateImpl pendingState = new PendingStateImpl(config, listener, (BlockchainImpl) blockchain);
         pendingState.setBlockchain(blockchain);
         pendingState.init();

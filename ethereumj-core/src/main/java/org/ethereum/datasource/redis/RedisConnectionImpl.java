@@ -25,7 +25,6 @@ import static org.springframework.util.StringUtils.isEmpty;
 @Component
 public class RedisConnectionImpl implements RedisConnection {
 
-    @Autowired
     SystemProperties config;
 
     private static final Logger logger = LoggerFactory.getLogger("db");
@@ -34,6 +33,7 @@ public class RedisConnectionImpl implements RedisConnection {
 
     private Serializers serializers;
 
+    @Autowired
     public RedisConnectionImpl(SystemProperties config) {
         this.config = config;
         this.serializers = new Serializers(config);

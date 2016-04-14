@@ -268,7 +268,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
                 repository,
                 new AdminInfo(),
                 listener,
-                new CommonConfig(config).parentHeaderValidator()
+                new CommonConfig(config, null, null).parentHeaderValidator()
         );
         blockchain.setParentHeaderValidator(new DependentBlockHeaderRuleAdapter());
         blockchain.setProgramInvokeFactory(programInvokeFactory);

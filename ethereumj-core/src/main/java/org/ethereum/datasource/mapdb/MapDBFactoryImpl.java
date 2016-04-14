@@ -21,6 +21,8 @@ public class MapDBFactoryImpl implements MapDBFactory {
     @Autowired
     SystemProperties config;
 
+    public MapDBFactoryImpl() {}
+
     public MapDBFactoryImpl(SystemProperties config) {
         this.config = config;
     }

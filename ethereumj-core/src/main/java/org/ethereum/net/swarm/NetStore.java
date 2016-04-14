@@ -26,10 +26,8 @@ import java.util.concurrent.Future;
 @Component
 public class NetStore implements ChunkStore {
 
-    @Autowired
     WorldManager worldManager;
 
-    @Autowired
     SystemProperties config;
 
 
@@ -47,6 +45,7 @@ public class NetStore implements ChunkStore {
     private Hive hive;
     private PeerAddress selfAddress;
 
+    @Autowired
     public NetStore(SystemProperties config) {
         this(config, new LocalStore(new MemStore(), new MemStore()), new Hive(null, createSelfAddress(config)));
         hive.setNetStore(this);

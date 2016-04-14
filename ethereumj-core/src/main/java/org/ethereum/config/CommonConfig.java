@@ -37,12 +37,9 @@ public class CommonConfig {
     @Autowired
     private MapDBFactory mapDBFactory;
     @Autowired
-    SystemProperties config;
+    private SystemProperties config;
 
-
-    public CommonConfig(SystemProperties config) {
-        this(config, null, null);
-    }
+    public CommonConfig() { }
 
     public CommonConfig(SystemProperties config, RedisConnection redisConnection, MapDBFactory mapDBFactory) {
         this.config = config;
@@ -179,8 +176,4 @@ public class CommonConfig {
         return new ParentBlockHeaderValidator(rules);
     }
 
-    @Bean
-    public SystemProperties systemProperties() {
-        return SystemProperties.getDefault();
-    }
 }

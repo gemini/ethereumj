@@ -52,23 +52,17 @@ public class PendingStateImpl implements PendingState {
 
     private static final Logger logger = LoggerFactory.getLogger("state");
 
-    @Autowired
     private EthereumListener listener;
 
-    @Autowired
     private Repository repository;
 
-    @Autowired
     private Blockchain blockchain;
 
-    @Autowired
     private BlockStore blockStore;
 
-    @Autowired
     private ProgramInvokeFactory programInvokeFactory;
 
-    @Autowired
-    SystemProperties config;
+    private SystemProperties config;
 
 //    @Resource
 //    @Qualifier("wireTransactions")
@@ -85,6 +79,7 @@ public class PendingStateImpl implements PendingState {
 
     private Block best = null;
 
+    @Autowired
     public PendingStateImpl(SystemProperties config, EthereumListener listener, BlockchainImpl blockchain) {
         this.config = config;
         this.listener = listener;
