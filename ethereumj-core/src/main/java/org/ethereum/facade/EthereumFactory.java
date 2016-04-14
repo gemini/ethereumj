@@ -41,7 +41,6 @@ public class EthereumFactory {
     }
 
     public static Ethereum createEthereum(SystemProperties config, Class userSpringConfig) {
-
         logger.info("Running {},  core version: {}-{}", config.genesisInfo(), SystemProperties.projectVersion(), SystemProperties.projectVersionModifier());
         BuildInfo.printInfo();
 
@@ -65,8 +64,9 @@ public class EthereumFactory {
         logger.info("capability shh version: [{}]", ShhHandler.VERSION);
         logger.info("capability bzz version: [{}]", BzzHandler.VERSION);
 
-        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(springConfigs);
+        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
         context.getBeanFactory().registerSingleton("systemProperties", config);
+        context.register(springConfigs);
         context.refresh();
         return context.getBean(Ethereum.class);
     }
