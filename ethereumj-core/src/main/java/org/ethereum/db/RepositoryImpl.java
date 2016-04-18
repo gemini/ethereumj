@@ -606,7 +606,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
         trie.setRoot(root);
         trie.setCache(((TrieImpl)(worldState)).getCache());
 
-        RepositoryImpl repo = new RepositoryImpl(config, detailsDS, stateDS);
+        RepositoryImpl repo = new RepositoryImpl(config);
         repo.worldState = trie;
         repo.stateDB = this.stateDB;
         repo.stateDS = this.stateDS;
