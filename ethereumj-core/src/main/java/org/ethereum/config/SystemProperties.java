@@ -90,8 +90,7 @@ public class SystemProperties {
 
         if (projectVersion == null) projectVersion = "-.-.-";
 
-        projectVersionModifier = props.getProperty("modifier");
-        projectVersionModifier = projectVersionModifier.replaceAll("\"", "");
+        projectVersionModifier = "master".equals(BuildInfo.buildBranch) ? "RELEASE" : "SNAPSHOT";
     }
 
 
