@@ -14,6 +14,7 @@ import org.ethereum.vm.DataWord;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.math.BigInteger;
@@ -40,6 +41,7 @@ public class TransactionStoreTest {
         SystemProperties.getDefault().setBlockchainConfig(MainNetConfig.INSTANCE);
     }
 
+    @Ignore
     @Test
     public void simpleTest() {
         String contractSrc =
