@@ -23,9 +23,9 @@ subprojects {
 
     def config = new ConfigSlurper().parse(new File("$projectDir/src/main/resources/version.properties").toURI().toURL())
 
-    group = 'org.ethereum'
+    group = 'org.ethereum.gemini' // temporarily avoid collisions
 
-    version = config.versionNumber + ("master" == gitCurBranch() ? "-RELEASE" : "-SNAPSHOT")
+    version = config.versionNumber // + ("master" == gitCurBranch() ? "-RELEASE" : "-SNAPSHOT")
 
     println("Building version: " + version + " (from branch " + gitCurBranch() + ")")
 

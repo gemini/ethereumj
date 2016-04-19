@@ -2,6 +2,7 @@ import java.text.SimpleDateFormat
 
 buildscript {
     repositories {
+        maven { url "${project.privateArtifactoryUrl}/maven-releases/" }
         jcenter()
         maven { url 'http://repo.spring.io/plugins-release-local' }
     }
@@ -16,11 +17,15 @@ plugins {
     id 'jacoco'
     id 'com.github.johnrengelman.shadow' version '1.2.0'
     id 'com.github.kt3k.coveralls' version '2.0.1x'
-    id 'com.jfrog.bintray' version '1.0'
 }
 
 apply plugin: 'propdeps-maven'
 apply plugin: 'com.jfrog.artifactory-upload'
+
+
+repositories {
+    maven { url "${project.privateArtifactoryUrl}/maven-releases/" }
+}
 
 sourceCompatibility = 1.7
 
@@ -185,56 +190,24 @@ jacocoTestReport {
     }
 }
 
-def bintrayUsername = project.hasProperty('bintrayUser') ? project.bintrayUser : ''
-def bintrayPassword = project.hasProperty('bintrayKey') ? project.bintrayKey : ''
-def pullRequest = System.getenv('TRAVIS_PULL_REQUEST')
-def branchName = System.getenv('TRAVIS_BRANCH')
+def publishUsername = project.hasProperty('publishUsername') ? project.publishUsername : ''
+def publishPassword = project.hasProperty('publishPassword') ? project.publishPassword : ''
 
 artifactory {
-    contextUrl = 'http://oss.jfrog.org/artifactory'
+    contextUrl = project.privateArtifactoryUrl
     publish {
         repository {
-            repoKey = 'oss-snapshot-local'
-            username = bintrayUsername
-            password = bintrayPassword
+            repoKey = 'ethereumj-local'
+            username = publishUsername
+            password = publishPassword
         }
     }
     resolve {
         repository {
-            repoKey = 'libs-release'
+            repoKey = 'maven-releases'
         }
     }
 
-}
-
-artifactoryPublish.onlyIf {
-    (branchName != null) &&
-            (!pullRequest || pullRequest == 'false') &&
-            project.version.endsWith('-SNAPSHOT') &&
-            (branchName.startsWith('master') ||
-                    branchName.startsWith('develop') ||
-                    branchName.startsWith('stage'))
-}
-
-bintray {
-    user = bintrayUsername
-    key = bintrayPassword
-
-    configurations = ['archives']
-
-    dryRun = false //Whether to run this as dry-run, without deploying
-    publish = true //If version should be auto published after an upload
-    pkg {
-        userOrg = 'ethereum' //An optional organization name when the repo belongs to one of the user's orgs
-        repo = 'maven'
-        name = 'org.ethereum'
-    }
-}
-
-bintrayUpload.onlyIf {
-    // comment 'false' and uncomment the next line to publish next release
-    (!pullRequest || pullRequest == 'false') && !project.version.endsWith('-SNAPSHOT')
-//     false
 }
 
 install {
@@ -249,14 +222,6 @@ tasks.processResources.doLast(){
     File versionfile = file(new File('build/resources/main/build-info.properties'))
     versionfile.text = 'build.hash=' + gitCommitHash() + '\n' + 'build.time=' + buildTime() + '\n' + 'build.branch=' + gitCurBranch() + '\n'
 }
-
-task publish {
-
-    println "publishing if master || develop current branch: " + branchName
-    description = "Publishes snapshots to oss.jfrog.org and releases to Bintray/JCenter"
-    dependsOn artifactoryPublish, bintrayUpload
-}
-
 
 def customizePom(pom, gradleProject) {
     pom.whenConfigured { generatedPom ->
