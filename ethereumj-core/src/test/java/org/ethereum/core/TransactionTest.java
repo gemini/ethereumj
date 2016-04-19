@@ -529,6 +529,7 @@ public class TransactionTest {
         }
     }
 
+    @Ignore
     @Test
     public void multiSuicideTest() throws IOException, InterruptedException {
         String contract =

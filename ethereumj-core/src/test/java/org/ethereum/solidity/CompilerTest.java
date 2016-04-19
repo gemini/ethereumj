@@ -3,6 +3,7 @@ package org.ethereum.solidity;
 import org.ethereum.solidity.compiler.CompilationResult;
 import org.ethereum.solidity.compiler.SolidityCompiler;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -12,6 +13,7 @@ import java.io.IOException;
  */
 public class CompilerTest {
 
+    @Ignore
     @Test
     public void simpleTest() throws IOException {
         String contract =

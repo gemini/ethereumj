@@ -12,6 +12,7 @@ import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
 import org.ethereum.facade.EthereumImpl;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -221,6 +222,7 @@ public class JsonRpcTest {
         }
     }
 
+    @Ignore
     @Test
     public void complexTest() throws Exception {
         System.out.println("Starting Ethereum...");

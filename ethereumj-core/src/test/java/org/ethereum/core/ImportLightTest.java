@@ -19,6 +19,7 @@ import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
 
@@ -178,6 +179,7 @@ public class ImportLightTest {
         Assert.assertTrue(importResult == ImportResult.IMPORTED_BEST);
     }
 
+    @Ignore
     @Test
     public void createContractFork() throws Exception {
         //  #1 (Parent) --> #2 --> #3 (Child) ----------------------> #4 (call Child)
@@ -224,6 +226,7 @@ public class ImportLightTest {
         Assert.assertEquals(BigInteger.valueOf(100 + 333 + 100 + 444), child.callConstFunction("c")[0]);
     }
 
+    @Ignore
     @Test
     public void createContractFork1() throws Exception {
         // Test creation of the contract on forked branch with different storage
@@ -259,6 +262,7 @@ public class ImportLightTest {
         }
     }
 
+    @Ignore
     @Test
     public void createValueTest() throws IOException, InterruptedException {
         // checks that correct msg.value is passed when contract internally created with value
@@ -285,6 +289,7 @@ public class ImportLightTest {
         Assert.assertEquals(20, val.longValue());
     }
 
+    @Ignore
     @Test
     public void contractCodeForkTest() throws IOException, InterruptedException {
         String contractA =
@@ -314,6 +319,7 @@ public class ImportLightTest {
         Assert.assertEquals(BigInteger.valueOf(222222), b.callConstFunction(b2_, "call")[0]);
     }
 
+    @Ignore
     @Test
     public void getBalanceTest() throws IOException, InterruptedException {
         // checking that addr.balance doesn't cause the account to be created
