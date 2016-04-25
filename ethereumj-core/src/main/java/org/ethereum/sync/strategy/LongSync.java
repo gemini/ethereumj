@@ -3,6 +3,7 @@ package org.ethereum.sync.strategy;
 import org.ethereum.core.BlockHeaderWrapper;
 import org.ethereum.net.server.Channel;
 import org.ethereum.sync.SyncState;
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -26,7 +27,7 @@ import static org.ethereum.util.BIUtil.isIn20PercentRange;
  * @since 02.02.2016
  */
 @Component
-public class LongSync extends AbstractSyncStrategy {
+public class LongSync extends AbstractSyncStrategy implements DisposableBean {
 
     private static final int ROTATION_LIMIT = 100;
 
@@ -186,5 +187,11 @@ public class LongSync extends AbstractSyncStrategy {
         logger.info("Change state from {} to {}", state, newState);
 
         state = newState;
+    }
+
+    @Override
+    public void destroy() throws Exception {
+        logger.info("destroy(): destroying LongSync sync strategy");
+        stop();
     }
 }
