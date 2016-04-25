@@ -3,15 +3,15 @@ package org.ethereum.datasource;
 import org.ethereum.config.SystemProperties;
 import org.slf4j.Logger;
 
+import javax.annotation.PreDestroy;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 import static org.slf4j.LoggerFactory.getLogger;
 
 public class DataSourcePool {
 
     private static final Logger logger = getLogger("db");
-    private static ConcurrentMap<String, KeyValueDataSource> pool = new ConcurrentHashMap<>();
+    private static ConcurrentHashMap<String, KeyValueDataSource> pool = new ConcurrentHashMap<>();
 
     public interface DataSourceMaker {
         KeyValueDataSource makeDataSource();
@@ -67,4 +67,23 @@ public class DataSourcePool {
             }
         }
     }
+
+    @PreDestroy
+    public void destroy() throws Exception {
+        logger.info("destroy: found {} entries in the db pool", pool.size());
+        for (String key : pool.keySet()) {
+            KeyValueDataSource dataSource = pool.remove(key);
+            logger.debug("destroy: removing data source '{}' from the pool and closing it", key);
+            if (dataSource != null) {
+                try {
+                    dataSource.close();
+                }
+                catch (Exception e) {
+                    logger.warn("destroy: error closing data source '"+key+"'", e);
+                }
+            }
+
+        }
+    }
+
 }

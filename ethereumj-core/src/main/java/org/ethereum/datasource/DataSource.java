@@ -13,6 +13,6 @@ public interface DataSource {
     void init();
 
     boolean isAlive();
-    
+
     void close();
 }

@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import java.util.concurrent.*;
 
 import static org.ethereum.sync.SyncState.*;
@@ -56,6 +57,8 @@ public class SyncManager {
 
     @Autowired
     CompositeSyncListener compositeSyncListener;
+
+    private ScheduledExecutorService logExecutorService;
 
     @PostConstruct
     public void init() {
@@ -185,7 +188,8 @@ public class SyncManager {
     // LOGS
 
     private void startLogWorker() {
-        Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(new Runnable() {
+        logExecutorService = Executors.newSingleThreadScheduledExecutor();
+        logExecutorService.scheduleWithFixedDelay(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -198,5 +202,17 @@ public class SyncManager {
                 }
             }
         }, 0, 30, TimeUnit.SECONDS);
+    }
+
+    @PreDestroy
+    public void destroy() {
+        if (logExecutorService != null) {
+            logExecutorService.shutdownNow();
+            try {
+                logExecutorService.awaitTermination(10L, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                logger.warn("shutdown: logExecutorService interrupted: {}", e.getMessage());
+            }
+        }
     }
 }

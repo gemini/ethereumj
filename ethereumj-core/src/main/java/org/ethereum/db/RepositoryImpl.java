@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.FileSystemUtils;
 
 import javax.annotation.Nonnull;
+import javax.annotation.PreDestroy;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -117,16 +118,19 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     }
 
     @Override
+    @PreDestroy
     public void close() {
         rwLock.writeLock().lock();
         try {
             if (detailsDB != null) {
+                logger.info("close(): closing detailsDB ...");
                 detailsDB.close();
                 detailsDB = null;
             }
 
 
             if (stateDB != null) {
+                logger.info("close(): closing stateDB ...");
                 stateDB.close();
                 stateDB = null;
             }

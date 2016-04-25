@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PreDestroy;
 import java.io.File;
 import java.util.Map;
 import java.util.Set;
@@ -111,6 +112,7 @@ public class MapDBDataSource implements KeyValueDataSource {
     }
 
     @Override
+    @PreDestroy
     public void close() {
         db.close();
         alive = false;

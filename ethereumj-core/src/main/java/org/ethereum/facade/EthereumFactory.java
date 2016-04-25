@@ -12,6 +12,9 @@ import org.ethereum.util.FileUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.stereotype.Component;
 
@@ -27,6 +30,7 @@ import java.util.List;
 public class EthereumFactory {
 
     private static final Logger logger = LoggerFactory.getLogger("general");
+    private static AnnotationConfigApplicationContext context = null;
 
     public static Ethereum createEthereum() {
         return createEthereum(SystemProperties.getDefault());
@@ -64,11 +68,17 @@ public class EthereumFactory {
         logger.info("capability shh version: [{}]", ShhHandler.VERSION);
         logger.info("capability bzz version: [{}]", BzzHandler.VERSION);
 
-        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
+        context = new AnnotationConfigApplicationContext();
         context.getBeanFactory().registerSingleton("systemProperties", config);
         context.register(springConfigs);
         context.refresh();
         return context.getBean(Ethereum.class);
+    }
+
+    public static void close() {
+        logger.info("close(): closing Spring application context");
+        context.close();
+        context.registerShutdownHook();
     }
 
 }
