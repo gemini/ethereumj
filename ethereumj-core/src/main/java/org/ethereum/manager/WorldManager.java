@@ -200,8 +200,6 @@ public class WorldManager {
         stopPeerDiscovery();
         logger.info("close: closing main repository ...");
         repository.close();
-        logger.info("close: shutting down event dispatch thread used by EventBus ...");
-        EventDispatchThread.shutdown();
     }
 
 }

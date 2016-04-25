@@ -1,5 +1,7 @@
 package org.ethereum.core;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,7 +22,11 @@ import java.util.concurrent.TimeUnit;
 public class EventDispatchThread {
     private static final Logger logger = LoggerFactory.getLogger("blockchain");
 
-    private final static ExecutorService executor = Executors.newSingleThreadExecutor();
+    private final static ExecutorService executor = Executors.newSingleThreadExecutor(
+        new ThreadFactoryBuilder()
+            .setDaemon(true)
+            .setNameFormat("ethereumj-event-dispatch-thread")
+            .build());
 
     private static volatile boolean shutdownInvoked = false;
 
@@ -39,6 +45,15 @@ public class EventDispatchThread {
         });
     }
 
+    /**
+     * Shut down the event dispatch executor
+     *
+     * The event dispatch thread is a single daemonic thread,
+     * so it will not halt JVM exit, and thus does not need
+     * to be explicitly shutdown. However, if one wishes to
+     * explicitly clean up the thread earlier, then this
+     * method will safely clean up this resource.
+     */
     public static void shutdown() {
         shutdownInvoked = true;
         executor.shutdownNow();
