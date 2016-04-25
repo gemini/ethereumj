@@ -90,6 +90,7 @@ public class WorldManager {
 
     public void stopPeerDiscovery() {
         if (peerDiscovery.isStarted())
+            logger.info("stopPeerDiscovery(): ...");
             peerDiscovery.stop();
     }
 
@@ -195,9 +196,12 @@ public class WorldManager {
 
     @PreDestroy
     public void close() {
+        logger.info("close: stopping peer discovery ...");
         stopPeerDiscovery();
+        logger.info("close: closing main repository ...");
         repository.close();
-        blockchain.close();
+        logger.info("close: shutting down event dispatch thread used by EventBus ...");
+        EventDispatchThread.shutdown();
     }
 
 }

@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * The class intended to serve as an 'Event Bus' where all EthereumJ events are
@@ -21,16 +22,30 @@ public class EventDispatchThread {
 
     private final static ExecutorService executor = Executors.newSingleThreadExecutor();
 
+    private static volatile boolean shutdownInvoked = false;
+
     public static void invokeLater(final Runnable r) {
         executor.submit(new Runnable() {
             @Override
             public void run() {
                 try {
-                    r.run();
+                    if (!shutdownInvoked) {
+                        r.run();
+                    }
                 } catch (Exception e) {
                     logger.error("EDT task exception", e);
                 }
             }
         });
+    }
+
+    public static void shutdown() {
+        shutdownInvoked = true;
+        executor.shutdownNow();
+        try {
+            executor.awaitTermination(10L, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            logger.warn("shutdown: executor interrupted: {}", e.getMessage());
+        }
     }
 }

@@ -13,6 +13,7 @@ import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PreDestroy;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
@@ -73,6 +74,8 @@ public class SyncQueue {
     @Autowired
     private CompositeEthereumListener compositeEthereumListener;
 
+    private volatile boolean shutdownQueueProducer = false;
+
     /**
      * Loads HashStore and BlockQueue from disk,
      * starts {@link #produceQueue()} thread
@@ -103,8 +106,18 @@ public class SyncQueue {
             }
         };
 
-        Thread t=new Thread (queueProducer, "SyncQueueThread");
-        t.start();
+        Thread syncQueueThread = new Thread (queueProducer, "SyncQueueThread");
+        syncQueueThread.start();
+    }
+
+    @PreDestroy
+    public void destroy() {
+        logger.info("destroy(): setting shutdownQueueProducer flag to false");
+        shutdownQueueProducer = true;
+        logger.info("destroy(): closing headerStore");
+        headerStore.close();
+        logger.info("destroy(): closing blockQueue");
+        blockQueue.close();
     }
 
     /**
@@ -112,7 +125,7 @@ public class SyncQueue {
      */
     private void produceQueue() {
 
-        while (true) {
+        while (!shutdownQueueProducer) {
 
             BlockWrapper wrapper = null;
             try {

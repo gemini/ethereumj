@@ -18,9 +18,11 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Nullable;
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import static java.lang.Math.min;
@@ -68,6 +70,8 @@ public class SyncPool implements Iterable<Channel> {
     @Autowired
     private NodeManager nodeManager;
 
+    private ScheduledExecutorService syncPoolExecutor;
+
     @PostConstruct
     public void init() {
 
@@ -75,7 +79,8 @@ public class SyncPool implements Iterable<Channel> {
 
         updateLowerUsefulDifficulty();
 
-        Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(
+        syncPoolExecutor = Executors.newSingleThreadScheduledExecutor();
+        syncPoolExecutor.scheduleWithFixedDelay(
                 new Runnable() {
                     @Override
                     public void run() {
@@ -91,6 +96,17 @@ public class SyncPool implements Iterable<Channel> {
                     }
                 }, WORKER_TIMEOUT, WORKER_TIMEOUT, TimeUnit.SECONDS
         );
+    }
+
+    @PreDestroy
+    public void destroy() {
+        logger.info("destory(): closing syncPoolExecutor");
+        syncPoolExecutor.shutdownNow();
+        try {
+            syncPoolExecutor.awaitTermination(10L, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            logger.warn("shutdown: syncPoolExecutor interrupted: {}", e.getMessage());
+        }
     }
 
     public synchronized void add(Channel peer) {

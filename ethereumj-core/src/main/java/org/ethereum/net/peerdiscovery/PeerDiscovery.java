@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PreDestroy;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
@@ -83,9 +84,13 @@ public class PeerDiscovery {
         started.set(true);
     }
 
+    @PreDestroy
     public void stop() {
-        executorPool.shutdown();
-        monitor.shutdown();
+        logger.info("stopping executor pool");
+        if (executorPool != null) executorPool.shutdown();
+        logger.info("stopping monitor");
+        if (monitor != null) monitor.shutdown();
+        logger.info("shutting started flag to false");
         started.set(false);
     }
 

@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PreDestroy;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -227,7 +228,9 @@ public class LevelDbDataSource implements KeyValueDataSource {
     }
 
     @Override
+    @PreDestroy
     public void close() {
+        logger.info("close(): closing '{}' LevelDB datasource.", name);
         resetDbLock.writeLock().lock();
         try {
             if (!isAlive()) return;

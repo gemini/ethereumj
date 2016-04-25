@@ -8,6 +8,7 @@ import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.PreDestroy;
 import java.io.*;
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -50,6 +51,25 @@ public class IndexedBlockStore extends AbstractBlockstore{
                 return new Block(bytes);
             }
         }).withCacheSize(256);
+    }
+
+    @PreDestroy
+    public void close() {
+        try {
+            logger.info("close(): closing indexDS");
+            indexDS.close();
+        }
+        catch (Exception e) {
+            logger.warn("close(): failed to indexDS because: "+e.getMessage(), e);
+        }
+
+        try {
+            logger.info("close(): closing blocksDS");
+            blocksDS.close();
+        }
+        catch (Exception e) {
+            logger.warn("close(): failed to blocksDS because: "+e.getMessage(), e);
+        }
     }
 
     public Block getBestBlock(){

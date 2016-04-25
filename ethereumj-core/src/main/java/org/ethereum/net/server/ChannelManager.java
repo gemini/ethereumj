@@ -21,6 +21,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 
 import static org.ethereum.net.message.ReasonCode.DUPLICATE_PEER;
 import static org.ethereum.net.message.ReasonCode.TOO_MANY_PEERS;
@@ -70,6 +71,16 @@ public class ChannelManager {
                 }
             }
         }, 0, 1, TimeUnit.SECONDS);
+    }
+
+    @PreDestroy
+    public void shutdown() {
+        mainWorker.shutdownNow();
+        try {
+            mainWorker.awaitTermination(10L, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            logger.warn("shutdown: mainWorker interrupted: {}", e.getMessage());
+        }
     }
 
     private void processNewPeers() {

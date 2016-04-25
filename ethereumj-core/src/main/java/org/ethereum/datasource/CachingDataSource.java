@@ -2,6 +2,7 @@ package org.ethereum.datasource;
 
 import org.ethereum.db.ByteArrayWrapper;
 
+import javax.annotation.PreDestroy;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -81,6 +82,7 @@ public class CachingDataSource implements KeyValueDataSource, Flushable {
     }
 
     @Override
+    @PreDestroy
     public void close() {
         source.close();
     }
