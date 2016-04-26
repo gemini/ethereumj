@@ -20,6 +20,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PreDestroy;
+
 /**
  * This class establishes a listener for incoming connections.
  * See <a href="http://netty.io">http://netty.io</a>.
@@ -44,15 +46,16 @@ public class PeerServer {
     EthereumListener ethereumListener;
 
     private boolean listening;
-
+    private EventLoopGroup bossGroup;
+    private EventLoopGroup workerGroup;
+    
     public PeerServer() {
     }
 
-
     public void start(int port) {
 
-        EventLoopGroup bossGroup = new NioEventLoopGroup(1);
-        EventLoopGroup workerGroup = new NioEventLoopGroup();
+        bossGroup = new NioEventLoopGroup(1);
+        workerGroup = new NioEventLoopGroup();
 
         ethereumChannelInitializer = ctx.getBean(EthereumChannelInitializer.class, "");
 
@@ -96,5 +99,25 @@ public class PeerServer {
 
     public boolean isListening() {
         return listening;
+    }
+
+    @PreDestroy
+    public void destroy() {
+        logger.info("destroy(): set litening to false");
+        listening = false;
+        logger.info("destroy(): shutting down worker group");
+        try {
+            workerGroup.shutdownGracefully();
+        }
+        catch (Exception e) {
+            logger.warn("destroy(): failed to shut down worker group because: "+e.getMessage(), e);
+        }
+        logger.info("destroy(): shutting down boss group");
+        try {
+            bossGroup.shutdownGracefully();
+        }
+        catch (Exception e) {
+            logger.warn("destroy(): failed to shut down boss group because: "+e.getMessage(), e);
+        }
     }
 }
