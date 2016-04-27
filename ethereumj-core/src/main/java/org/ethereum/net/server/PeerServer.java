@@ -1,13 +1,10 @@
 package org.ethereum.net.server;
 
+import io.netty.channel.*;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.listener.EthereumListener;
 
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.DefaultMessageSizeEstimator;
-import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LoggingHandler;
@@ -48,6 +45,7 @@ public class PeerServer {
     private boolean listening;
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
+    private io.netty.channel.Channel channel;
     
     public PeerServer() {
     }
@@ -79,11 +77,11 @@ public class PeerServer {
             logger.info("Listening for incoming connections, port: [{}] ", port);
             logger.info("NodeId: [{}] ", Hex.toHexString(config.nodeId()));
 
-            ChannelFuture f = b.bind(port).sync();
+            channel = b.bind(port).sync().channel();
 
             listening = true;
             // Wait until the connection is closed.
-            f.channel().closeFuture().sync();
+            channel.closeFuture().sync();
             logger.debug("Connection is closed");
 
             // TODO review listening use
@@ -103,21 +101,30 @@ public class PeerServer {
 
     @PreDestroy
     public void destroy() {
-        logger.info("destroy(): set litening to false");
-        listening = false;
-        logger.info("destroy(): shutting down worker group");
-        try {
-            workerGroup.shutdownGracefully();
-        }
-        catch (Exception e) {
-            logger.warn("destroy(): failed to shut down worker group because: "+e.getMessage(), e);
-        }
-        logger.info("destroy(): shutting down boss group");
-        try {
-            bossGroup.shutdownGracefully();
-        }
-        catch (Exception e) {
-            logger.warn("destroy(): failed to shut down boss group because: "+e.getMessage(), e);
+        if (listening) {
+            logger.info("destroy(): set listening to false");
+            listening = false;
+            logger.info("destroy(): shutting down the PeerServer channel");
+            try {
+                channel.close().sync();
+            }
+            catch (Exception e) {
+                logger.warn("destroy(): failed to shut down the PeerServer channel because: "+e.getMessage(), e);
+            }
+            logger.info("destroy(): shutting down worker group");
+            try {
+                workerGroup.shutdownGracefully();
+            }
+            catch (Exception e) {
+                logger.warn("destroy(): failed to shut down worker group because: "+e.getMessage(), e);
+            }
+            logger.info("destroy(): shutting down boss group");
+            try {
+                bossGroup.shutdownGracefully();
+            }
+            catch (Exception e) {
+                logger.warn("destroy(): failed to shut down boss group because: "+e.getMessage(), e);
+            }
         }
     }
 }
