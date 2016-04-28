@@ -266,7 +266,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
 
     @Override
     public synchronized Repository startTracking() {
-        return applicationContext == null ? new RepositoryTrack(this) :
+        return applicationContext == null ? new RepositoryTrack(this, config) :
                 applicationContext.getBean(RepositoryTrack.class, this);
     }
 

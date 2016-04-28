@@ -47,10 +47,6 @@ public class RepositoryTrack implements Repository, org.ethereum.facade.Reposito
     @Autowired
     SystemProperties config;
 
-    public RepositoryTrack(Repository repository) {
-        this.repository = repository;
-    }
-
     public RepositoryTrack(Repository repository, SystemProperties config) {
         this.repository = repository;
         this.config = config;
@@ -319,7 +315,7 @@ public class RepositoryTrack implements Repository, org.ethereum.facade.Reposito
     public Repository startTracking() {
         logger.trace("start tracking: {}", this);
 
-        Repository repository = applicationContext == null ? new RepositoryTrack(this) :
+        Repository repository = applicationContext == null ? new RepositoryTrack(this, config) :
                 applicationContext.getBean(RepositoryTrack.class, this);
 
         return repository;
