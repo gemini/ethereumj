@@ -47,6 +47,11 @@ public class RepositoryTrack implements Repository, org.ethereum.facade.Reposito
     @Autowired
     SystemProperties config;
 
+    // used by Spring wiring
+    public RepositoryTrack(Repository repository) {
+        this.repository = repository;
+    }
+
     public RepositoryTrack(Repository repository, SystemProperties config) {
         this.repository = repository;
         this.config = config;
