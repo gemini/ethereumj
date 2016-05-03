@@ -427,6 +427,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             listener.trace(String.format("Block chain size: [ %d ]", this.getSize()));
 
             if (ret == IMPORTED_BEST) {
+                listener.onBestBlock(summary);
                 eventDispatchThread.invokeLater(new Runnable() {
                     @Override
                     public void run() {
