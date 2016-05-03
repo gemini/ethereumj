@@ -343,7 +343,9 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 //                    pendingState.processBest(block);
 //                }
 //            });
-//
+
+            listener.onBestBlock(block);
+
             return IMPORTED_BEST;
         } else {
             // Stay on previous branch
@@ -385,6 +387,9 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
                         pendingState.processBest(block);
                     }
                 });
+
+                listener.onBestBlock(block);
+
                 return IMPORTED_BEST;
             } else {
                 return INVALID_BLOCK;
