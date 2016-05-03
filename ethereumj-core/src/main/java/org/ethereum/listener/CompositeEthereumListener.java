@@ -42,6 +42,13 @@ public class CompositeEthereumListener implements EthereumListener {
     }
 
     @Override
+    public void onBestBlock(Block block) {
+        for (EthereumListener listener : listeners) {
+            listener.onBestBlock(block);
+        }
+    }
+
+    @Override
     public void onRecvMessage(Channel channel, Message message) {
         for (EthereumListener listener : listeners) {
             listener.onRecvMessage(channel, message);
