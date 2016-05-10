@@ -32,6 +32,8 @@ public class LongSync extends AbstractSyncStrategy {
 
     private SyncState state = HASH_RETRIEVING;
 
+    private Thread headerProducer;
+
     @Override
     public SyncState getState() {
         return state;
@@ -42,7 +44,7 @@ public class LongSync extends AbstractSyncStrategy {
 
         super.start();
 
-        Thread headerProducer = new Thread(new Runnable() {
+        headerProducer = new Thread(new Runnable() {
             @Override
             public void run() {
                 produceHeaders();
@@ -68,6 +70,8 @@ public class LongSync extends AbstractSyncStrategy {
                 }
 
                 peer.fetchBlockBodies(headers);
+
+            } catch (InterruptedException e){
 
             } catch (Throwable t) {
                 if (headers == null || headers.isEmpty()) {
@@ -187,4 +191,12 @@ public class LongSync extends AbstractSyncStrategy {
 
         state = newState;
     }
+
+    @Override
+    public void destroy() throws Exception {
+        logger.info("destroy(): destroying LongSync sync strategy");
+        headerProducer.interrupt();
+        stop();
+    }
+
 }

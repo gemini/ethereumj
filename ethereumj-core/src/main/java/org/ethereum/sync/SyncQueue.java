@@ -13,6 +13,7 @@ import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PreDestroy;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
@@ -73,6 +74,10 @@ public class SyncQueue {
     @Autowired
     private CompositeEthereumListener compositeEthereumListener;
 
+    private Thread syncQueueThread;
+
+    private volatile boolean shutdownQueueProducer = false;
+
     /**
      * Loads HashStore and BlockQueue from disk,
      * starts {@link #produceQueue()} thread
@@ -103,8 +108,19 @@ public class SyncQueue {
             }
         };
 
-        Thread t=new Thread (queueProducer, "SyncQueueThread");
-        t.start();
+        syncQueueThread = new Thread (queueProducer, "SyncQueueThread");
+        syncQueueThread.start();
+    }
+
+    @PreDestroy
+    public void destroy() {
+        logger.info("destroy(): setting shutdownQueueProducer flag to false");
+        shutdownQueueProducer = true;
+        logger.info("destroy(): closing headerStore");
+        headerStore.close();
+        logger.info("destroy(): closing blockQueue");
+        blockQueue.close();
+        syncQueueThread.interrupt();
     }
 
     /**
@@ -147,6 +163,8 @@ public class SyncQueue {
 
                     waitForBlocks();
                 }
+
+            } catch (InterruptedException e) {
 
             } catch (Throwable e) {
                 logger.error("Error processing block {}: ", wrapper.getBlock().getShortDescr(), e);
@@ -279,13 +297,13 @@ public class SyncQueue {
      *
      * @return list of headers
      */
-    public List<BlockHeaderWrapper> takeHeaders() {
+    public List<BlockHeaderWrapper> takeHeaders() throws InterruptedException {
 
         headersLock.lock();
         try {
             List<BlockHeaderWrapper> headers;
             while ((headers = headerStore.pollBatch(config.maxBlocksAsk())).isEmpty()) {
-                headersNotEmpty.awaitUninterruptibly();
+                headersNotEmpty.await();
                 if (longSyncDone) return emptyList();
             }
             if (logger.isDebugEnabled() && !headerStore.isEmpty())
