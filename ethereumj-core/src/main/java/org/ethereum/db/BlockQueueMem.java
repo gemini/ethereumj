@@ -35,6 +35,8 @@ public class BlockQueueMem implements BlockQueue {
 
     private final Object mutex = new Object();
 
+    private boolean shutdown = false;
+
     // Transaction.getSender() is quite heavy operation so we are prefetching this value on several threads
     // to unload the main block importing cycle
     private ExecutorPipeline<Pair<BlockWrapper, Boolean>, Pair<BlockWrapper, Boolean>> exec1 = new ExecutorPipeline<>
@@ -71,6 +73,9 @@ public class BlockQueueMem implements BlockQueue {
 
     @Override
     public void close() {
+        exec1.shutdown();
+        exec2.shutdown();
+        shutdown = true;
     }
 
     @Override
@@ -164,12 +169,12 @@ public class BlockQueueMem implements BlockQueue {
     }
 
     @Override
-    public BlockWrapper take() {
+    public BlockWrapper take() throws InterruptedException {
         takeLock.lock();
         try {
             BlockWrapper block;
-            while (null == (block = pollInner())) {
-                notEmpty.awaitUninterruptibly();
+            while (null == (block = pollInner()) || shutdown) {
+                notEmpty.await();
             }
             return block;
         } finally {

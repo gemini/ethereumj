@@ -133,4 +133,8 @@ public class ExecutorPipeline <In, Out>{
             return false;
         }
     }
+
+    public void shutdown() {
+        exec.shutdown();
+    }
 }
