@@ -72,7 +72,7 @@ public class LongSync extends AbstractSyncStrategy {
                 peer.fetchBlockBodies(headers);
 
             } catch (InterruptedException e){
-
+                stop();
             } catch (Throwable t) {
                 if (headers == null || headers.isEmpty()) {
                     logger.error("Error processing headers, {}", t);

@@ -165,7 +165,7 @@ public class SyncQueue {
                 }
 
             } catch (InterruptedException e) {
-
+                shutdownQueueProducer = true;
             } catch (Throwable e) {
                 logger.error("Error processing block {}: ", wrapper.getBlock().getShortDescr(), e);
                 logger.error("Block dump: {}", Hex.toHexString(wrapper.getBlock().getEncoded()));
