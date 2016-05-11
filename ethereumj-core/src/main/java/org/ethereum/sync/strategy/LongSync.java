@@ -33,6 +33,8 @@ public class LongSync extends AbstractSyncStrategy implements DisposableBean {
 
     private SyncState state = HASH_RETRIEVING;
 
+    private Thread headerProducer;
+
     @Override
     public SyncState getState() {
         return state;
@@ -43,7 +45,7 @@ public class LongSync extends AbstractSyncStrategy implements DisposableBean {
 
         super.start();
 
-        Thread headerProducer = new Thread(new Runnable() {
+        headerProducer = new Thread(new Runnable() {
             @Override
             public void run() {
                 produceHeaders();
@@ -70,6 +72,8 @@ public class LongSync extends AbstractSyncStrategy implements DisposableBean {
 
                 peer.fetchBlockBodies(headers);
 
+            } catch (InterruptedException e){
+                stop();
             } catch (Throwable t) {
                 if (headers == null || headers.isEmpty()) {
                     logger.error("Error processing headers, {}", t);
@@ -192,6 +196,7 @@ public class LongSync extends AbstractSyncStrategy implements DisposableBean {
     @Override
     public void destroy() throws Exception {
         logger.info("destroy(): destroying LongSync sync strategy");
+        headerProducer.interrupt();
         stop();
     }
 }

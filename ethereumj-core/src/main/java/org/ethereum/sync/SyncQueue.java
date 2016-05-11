@@ -74,6 +74,8 @@ public class SyncQueue {
     @Autowired
     private CompositeEthereumListener compositeEthereumListener;
 
+    private Thread syncQueueThread;
+
     private volatile boolean shutdownQueueProducer = false;
 
     /**
@@ -106,7 +108,7 @@ public class SyncQueue {
             }
         };
 
-        Thread syncQueueThread = new Thread (queueProducer, "SyncQueueThread");
+        syncQueueThread = new Thread (queueProducer, "SyncQueueThread");
         syncQueueThread.start();
     }
 
@@ -118,6 +120,7 @@ public class SyncQueue {
         headerStore.close();
         logger.info("destroy(): closing blockQueue");
         blockQueue.close();
+        syncQueueThread.interrupt();
     }
 
     /**
@@ -161,6 +164,8 @@ public class SyncQueue {
                     waitForBlocks();
                 }
 
+            } catch (InterruptedException e) {
+                shutdownQueueProducer = true;
             } catch (Throwable e) {
                 logger.error("Error processing block {}: ", wrapper.getBlock().getShortDescr(), e);
                 logger.error("Block dump: {}", Hex.toHexString(wrapper.getBlock().getEncoded()));
@@ -292,13 +297,13 @@ public class SyncQueue {
      *
      * @return list of headers
      */
-    public List<BlockHeaderWrapper> takeHeaders() {
+    public List<BlockHeaderWrapper> takeHeaders() throws InterruptedException {
 
         headersLock.lock();
         try {
             List<BlockHeaderWrapper> headers;
             while ((headers = headerStore.pollBatch(config.maxBlocksAsk())).isEmpty()) {
-                headersNotEmpty.awaitUninterruptibly();
+                headersNotEmpty.await();
                 if (longSyncDone) return emptyList();
             }
             if (logger.isDebugEnabled() && !headerStore.isEmpty())

@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -77,6 +78,7 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
     private HTreeMap<Node, NodeStatistics.Persistent> nodeStatsDB;
     private boolean inited = false;
 
+    private Timer statisticsTimer = null;
     public NodeManager() {
     }
 
@@ -95,8 +97,8 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
         homeNode = new Node(config.nodeId(), config.externalIp(), config.listenPort());
         table = new NodeTable(homeNode, config.isPublicHomeNode());
 
-        Timer timer = new Timer();
-        timer.scheduleAtFixedRate(new TimerTask() {
+        statisticsTimer = new Timer();
+        statisticsTimer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
                 logger.trace("Statistics:\n {}", dumpAllStatistics());
@@ -110,6 +112,11 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
 
     void setBootNodes(List<Node> bootNodes) {
         this.bootNodes = bootNodes;
+    }
+
+    @PreDestroy
+    void shutdown() {
+        statisticsTimer.cancel();
     }
 
     void channelActivated() {
