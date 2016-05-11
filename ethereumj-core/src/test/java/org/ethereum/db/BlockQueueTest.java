@@ -97,7 +97,7 @@ public class BlockQueueTest {
     }
 
     @Test // basic checks
-    public void test1() {
+    public void test1() throws InterruptedException {
         long receivedAt = System.currentTimeMillis();
         long importFailedAt = receivedAt + receivedAt / 2;
         BlockWrapper wrapper = new BlockWrapper(blocks.get(0), true, nodeId);
@@ -265,7 +265,7 @@ public class BlockQueueTest {
     }
 
     @Test // test dropping
-    public void test3() {
+    public void test3() throws InterruptedException {
         Random rnd = new Random(System.currentTimeMillis());
         byte[] nodeA = new byte[32];
         byte[] nodeB = new byte[32];

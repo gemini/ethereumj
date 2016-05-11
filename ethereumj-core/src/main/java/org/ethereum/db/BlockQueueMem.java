@@ -73,8 +73,18 @@ public class BlockQueueMem implements BlockQueue {
 
     @Override
     public void close() {
-        exec1.shutdown();
-        exec2.shutdown();
+        try {
+            exec1.shutdown();
+        }
+        catch (Exception e) {
+            logger.warn("close(): error shutting down exec1: "+e.getMessage(), e);
+        }
+        try {
+            exec2.shutdown();
+        }
+        catch (Exception e) {
+            logger.warn("close(): error shutting down exec2: "+e.getMessage(), e);
+        }
         shutdown = true;
     }
 
