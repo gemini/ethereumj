@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.*;
@@ -99,6 +100,11 @@ public class PeerConnectionTester {
                                 h1.nodeHandler.getNodeStatistics().getReputation();
                     }
                 }));
+    }
+
+    @PreDestroy
+    void shutdown() {
+        reconnectTimer.cancel();
     }
 
     public void nodeStatusChanged(final NodeHandler nodeHandler) {

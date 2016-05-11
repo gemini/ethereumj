@@ -25,7 +25,7 @@ public interface BlockQueue extends DiskStore {
 
     BlockWrapper peek();
 
-    BlockWrapper take();
+    BlockWrapper take() throws InterruptedException;
 
     int size();
 
