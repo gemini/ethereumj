@@ -141,7 +141,7 @@ public class ImportLightTest {
                 ByteUtil.longToBytesNoLeadZeroes(50_000_000_000L),
                 ByteUtil.longToBytesNoLeadZeroes(0xfffff),
                 receiverAddr, new byte[]{77}, new byte[0]);
-        tx.sign(senderKey.getPrivKeyBytes());
+        tx.sign(senderKey);
 
         Block b1 = blockchain.createNewBlock(parent, Collections.singletonList(tx), Collections.EMPTY_LIST);
         Ethash.getForBlock(b1.getNumber()).mineLight(b1).get();
@@ -159,7 +159,7 @@ public class ImportLightTest {
                 ByteUtil.longToBytesNoLeadZeroes(50_000_000_000L),
                 ByteUtil.longToBytesNoLeadZeroes(0xfffff),
                 receiverAddr, new byte[]{77}, new byte[0]);
-        tx1.sign(senderKey.getPrivKeyBytes());
+        tx1.sign(senderKey);
         b2 = blockchain.createNewBlock(b1, Arrays.asList(tx1, tx1), Collections.EMPTY_LIST);
         Ethash.getForBlock(b2.getNumber()).mineLight(b2).get();
         importResult = blockchain.tryToConnect(b2);
@@ -170,7 +170,7 @@ public class ImportLightTest {
                 ByteUtil.longToBytesNoLeadZeroes(50_000_000_000L),
                 ByteUtil.longToBytesNoLeadZeroes(0xfffff),
                 receiverAddr, new byte[]{77}, new byte[0]);
-        tx2.sign(senderKey.getPrivKeyBytes());
+        tx2.sign(senderKey);
         b2 = blockchain.createNewBlock(b1, Arrays.asList(tx1, tx2), Collections.EMPTY_LIST);
         Ethash.getForBlock(b2.getNumber()).mineLight(b2).get();
         importResult = blockchain.tryToConnect(b2);
@@ -181,7 +181,7 @@ public class ImportLightTest {
                 ByteUtil.longToBytesNoLeadZeroes(50_000_000_000L),
                 ByteUtil.longToBytesNoLeadZeroes(0xfffff),
                 receiverAddr, new byte[]{88}, new byte[0]);
-        tx1.sign(senderKey.getPrivKeyBytes());
+        tx1.sign(senderKey);
         Block b2f = blockchain.createNewBlock(b1, Collections.singletonList(tx1), Collections.EMPTY_LIST);
         Ethash.getForBlock(b2f.getNumber()).mineLight(b2f).get();
         importResult = blockchain.tryToConnect(b2f);
@@ -192,17 +192,17 @@ public class ImportLightTest {
                 ByteUtil.longToBytesNoLeadZeroes(50_000_000_000L),
                 ByteUtil.longToBytesNoLeadZeroes(0xfffff),
                 receiverAddr, new byte[]{88}, new byte[0]);
-        tx1.sign(senderKey.getPrivKeyBytes());
+        tx1.sign(senderKey);
         tx2 = new Transaction(ByteUtil.intToBytesNoLeadZeroes(4),
                 ByteUtil.longToBytesNoLeadZeroes(50_000_000_000L),
                 ByteUtil.longToBytesNoLeadZeroes(0xfffff),
                 receiverAddr, new byte[]{88}, new byte[0]);
-        tx2.sign(senderKey.getPrivKeyBytes());
+        tx2.sign(senderKey);
         Transaction tx3 = new Transaction(ByteUtil.intToBytesNoLeadZeroes(5),
                 ByteUtil.longToBytesNoLeadZeroes(50_000_000_000L),
                 ByteUtil.longToBytesNoLeadZeroes(0xfffff),
                 receiverAddr, new byte[]{88}, new byte[0]);
-        tx3.sign(senderKey.getPrivKeyBytes());
+        tx3.sign(senderKey);
         Block b3 = blockchain.createNewBlock(b2, Arrays.asList(tx1, tx2, tx3), Collections.EMPTY_LIST);
         Ethash.getForBlock(b3.getNumber()).mineLight(b3).get();
         importResult = blockchain.tryToConnect(b3);
