@@ -22,6 +22,14 @@ import java.util.concurrent.*;
 public class PeerConnectionTester {
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger("discover");
 
+    private static Comparator<ConnectTask> connectTaskComparator = new Comparator<ConnectTask>() {
+        @Override
+        public int compare(ConnectTask h1, ConnectTask h2) {
+            return h2.nodeHandler.getNodeStatistics().getReputation() -
+                    h1.nodeHandler.getNodeStatistics().getReputation();
+        }
+    };
+
     private int ConnectThreads;
     private long ReconnectPeriod;
     private long ReconnectMaxPeers;
@@ -91,13 +99,7 @@ public class PeerConnectionTester {
         ReconnectMaxPeers = config.peerDiscoveryTouchMaxNodes();
         peerConnectionPool = new ThreadPoolExecutor(ConnectThreads,
                 ConnectThreads, 0L, TimeUnit.SECONDS,
-                new MutablePriorityQueue<Runnable, ConnectTask>(new Comparator<ConnectTask>() {
-                    @Override
-                    public int compare(ConnectTask h1, ConnectTask h2) {
-                        return h2.nodeHandler.getNodeStatistics().getReputation() -
-                                h1.nodeHandler.getNodeStatistics().getReputation();
-                    }
-                }));
+                new MutablePriorityQueue<Runnable, ConnectTask>(connectTaskComparator));
     }
 
     public void close() {
