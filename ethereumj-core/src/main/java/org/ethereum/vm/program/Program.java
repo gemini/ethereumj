@@ -87,11 +87,11 @@ public class Program {
 
         this.ops = nullToEmpty(ops);
 
+        this.traceListener = new ProgramTraceListener(config.vmTrace());
         this.memory = setupProgramListener(new Memory());
         this.stack = setupProgramListener(new Stack());
         this.storage = setupProgramListener(new Storage(programInvoke));
         this.trace = new ProgramTrace(config, programInvoke);
-        this.traceListener = new ProgramTraceListener(config.vmTrace());
 
         precompile();
     }
