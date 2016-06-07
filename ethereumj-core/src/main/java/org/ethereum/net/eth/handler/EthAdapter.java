@@ -46,10 +46,6 @@ public class EthAdapter implements Eth {
     }
 
     @Override
-    public void changeState(SyncState newState) {
-    }
-
-    @Override
     public boolean isHashRetrievingDone() {
         return false;
     }
@@ -82,6 +78,14 @@ public class EthAdapter implements Eth {
     }
 
     @Override
+    public void sendGetBlockHeaders(long blockNumber, int maxBlocksAsk, boolean reverse) {
+    }
+
+    @Override
+    public void sendGetBlockBodies(List<BlockHeaderWrapper> headers) {
+    }
+
+    @Override
     public void sendNewBlock(Block newBlock) {
     }
 
@@ -101,10 +105,6 @@ public class EthAdapter implements Eth {
 
     @Override
     public void sendStatus() {
-    }
-
-    @Override
-    public void recoverGap(BlockWrapper block) {
     }
 
     @Override

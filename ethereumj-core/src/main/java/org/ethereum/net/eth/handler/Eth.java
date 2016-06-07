@@ -43,13 +43,6 @@ public interface Eth {
     void logSyncStats();
 
     /**
-     * Changes Sync state to the new one
-     *
-     * @param newState new state
-     */
-    void changeState(SyncState newState);
-
-    /**
      * @return true if syncState is DONE_HASH_RETRIEVING, false otherwise
      */
     boolean isHashRetrievingDone();
@@ -87,6 +80,16 @@ public interface Eth {
     void sendTransaction(List<Transaction> tx);
 
     /**
+     *  Send GET_BLOCK_HEADERS message to the peer
+     */
+    void sendGetBlockHeaders(long blockNumber, int maxBlocksAsk, boolean reverse);
+
+    /**
+     *  Send GET_BLOCK_BODIES message to the peer
+     */
+    void sendGetBlockBodies(List<BlockHeaderWrapper> headers);
+
+    /**
      * Sends new block to the wire
      */
     void sendNewBlock(Block newBlock);
@@ -113,13 +116,6 @@ public interface Eth {
      * Sends {@link EthMessageCodes#STATUS} message
      */
     void sendStatus();
-
-    /**
-     * Tries to recover a gap
-     *
-     * @param block gap block
-     */
-    void recoverGap(BlockWrapper block);
 
     /**
      * Drops connection with remote peer.

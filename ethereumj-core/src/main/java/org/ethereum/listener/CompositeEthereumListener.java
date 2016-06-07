@@ -138,18 +138,4 @@ public class CompositeEthereumListener implements EthereumListener {
             listener.onPeerAddedToSyncPool(peer);
         }
     }
-
-    @Override
-    public void onLongSyncDone() {
-        for (EthereumListener listener : listeners) {
-            listener.onLongSyncDone();
-        }
-    }
-
-    @Override
-    public void onLongSyncStarted() {
-        for (EthereumListener listener : listeners) {
-            listener.onLongSyncStarted();
-        }
-    }
 }
