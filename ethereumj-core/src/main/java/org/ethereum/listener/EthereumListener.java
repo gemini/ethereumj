@@ -39,10 +39,6 @@ public interface EthereumListener {
 
     void onPendingStateChanged(PendingState pendingState);
 
-    /**
-     * @deprecated What should be used instead?
-     */
-    @Deprecated
     void onSyncDone();
 
     void onNoConnections();
@@ -52,8 +48,4 @@ public interface EthereumListener {
     void onTransactionExecuted(TransactionExecutionSummary summary);
 
     void onPeerAddedToSyncPool(Channel peer);
-
-    void onLongSyncDone();
-
-    void onLongSyncStarted();
 }

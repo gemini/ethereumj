@@ -140,7 +140,7 @@ public class PeerConnectionTester {
         }
 
         @Override
-        public T take() throws InterruptedException {
+        public synchronized T take() throws InterruptedException {
             if (isEmpty()) {
                 return super.take();
             } else {
@@ -151,7 +151,7 @@ public class PeerConnectionTester {
         }
 
         @Override
-        public T poll(long timeout, TimeUnit unit) throws InterruptedException {
+        public synchronized T poll(long timeout, TimeUnit unit) throws InterruptedException {
             if (isEmpty()) {
                 return super.poll(timeout, unit);
             } else {
@@ -162,7 +162,7 @@ public class PeerConnectionTester {
         }
 
         @Override
-        public T poll() {
+        public synchronized T poll() {
             if (isEmpty()) {
                 return super.poll();
             } else {
@@ -173,7 +173,7 @@ public class PeerConnectionTester {
         }
 
         @Override
-        public T peek() {
+        public synchronized T peek() {
             if (isEmpty()) {
                 return super.peek();
             } else {
