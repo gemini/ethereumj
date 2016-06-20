@@ -301,18 +301,21 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         stateStack.pop();
     }
 
-    public synchronized ImportResult tryConnectAndFork(final Block block) {
+    private synchronized List<TransactionReceipt> tryConnectAndFork(final Block block) {
         State savedState = pushState(block.getParentHash());
         this.fork = true;
 
+        final List<TransactionReceipt> receipts;
         try {
 
             // FIXME: adding block with no option for flush
-            if (!add(block)) {
-                return INVALID_BLOCK;
+            receipts = add(block);
+            if (receipts == null) {
+                return null;
             }
         } catch (Throwable th) {
             logger.error("Unexpected error: ", th);
+            return null;
         } finally {
             this.fork = false;
         }
@@ -336,23 +339,12 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             }
 
             dropState();
-
-//            EDT.invokeLater(new Runnable() {
-//                @Override
-//                public void run() {
-//                    pendingState.processBest(block);
-//                }
-//            });
-
-            listener.onBestBlock(block);
-
-            return IMPORTED_BEST;
         } else {
             // Stay on previous branch
             popState();
-
-            return IMPORTED_NOT_BEST;
         }
+
+        return receipts;
     }
 
 
@@ -375,46 +367,48 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             return EXIST;
         }
 
+        final ImportResult ret;
+
         // The simple case got the block
         // to connect to the main chain
+        List<TransactionReceipt> receipts = null;
         if (bestBlock.isParentOf(block)) {
             recordBlock(block);
+            receipts = add(block);
 
-            if (add(block)) {
+            ret = receipts == null ? INVALID_BLOCK : IMPORTED_BEST;
+        } else {
+
+            if (blockStore.isBlockExist(block.getParentHash())) {
+                BigInteger oldTotalDiff = getTotalDifficulty();
+
+                recordBlock(block);
+                receipts = tryConnectAndFork(block);
+
+                ret = receipts == null ? INVALID_BLOCK :
+                        (isMoreThan(getTotalDifficulty(), oldTotalDiff) ? IMPORTED_BEST : IMPORTED_NOT_BEST);
+            } else {
+                ret = NO_PARENT;
+            }
+
+        }
+
+        if (ret.isSuccessful()) {
+            listener.onBlock(block, receipts);
+            listener.trace(String.format("Block chain size: [ %d ]", this.getSize()));
+
+            if (ret == IMPORTED_BEST) {
+                listener.onBestBlock(block);
                 EventDispatchThread.invokeLater(new Runnable() {
                     @Override
                     public void run() {
                         pendingState.processBest(block);
                     }
                 });
-
-                listener.onBestBlock(block);
-
-                return IMPORTED_BEST;
-            } else {
-                return INVALID_BLOCK;
             }
-        } else {
-
-            if (blockStore.isBlockExist(block.getParentHash())) {
-                recordBlock(block);
-                ImportResult result = tryConnectAndFork(block);
-
-                if (result == IMPORTED_BEST) {
-                    EventDispatchThread.invokeLater(new Runnable() {
-                        @Override
-                        public void run() {
-                            pendingState.processBest(block);
-                        }
-                    });
-                }
-
-                return result;
-            }
-
         }
 
-        return NO_PARENT;
+        return ret;
     }
 
     public synchronized Block createNewBlock(Block parent, List<Transaction> txs, List<BlockHeader> uncles) {
@@ -468,7 +462,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     }
 
     @Override
-    public synchronized boolean add(Block block) {
+    public synchronized List<TransactionReceipt> add(Block block) {
 
         if (exitOn < block.getNumber()) {
             System.out.print("Exiting after block.number: " + bestBlock.getNumber());
@@ -479,18 +473,18 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
         if (!isValid(block)) {
             logger.warn("Invalid block with number: {}", block.getNumber());
-            return false;
+            return null;
         }
 
         track = repository.startTracking();
         byte[] origRoot = repository.getRoot();
 
         if (block == null)
-            return false;
+            return null;
 
         // keep chain continuity
         if (!Arrays.equals(bestBlock.getHash(),
-                block.getParentHash())) return false;
+                block.getParentHash())) return null;
 
         if (block.getNumber() >= config.traceStartBlock() && config.traceStartBlock() != -1) {
             AdvancedDeviceUtils.adjustDetailedTracing(block.getNumber(), config.traceStartBlock());
@@ -537,11 +531,12 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
                 System.out.println("CONFLICT: BLOCK #" + block.getNumber() + ", dump: " + Hex.toHexString(block.getEncoded()));
                 System.exit(1);
             } else {
-                return false;
+                return null;
             }
         }
 
         track.commit();
+        updateTotalDifficulty(block);
         storeBlock(block, receipts);
 
 
@@ -549,10 +544,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             flush();
         }
 
-        listener.trace(String.format("Block chain size: [ %d ]", this.getSize()));
-        listener.onBlock(block, receipts);
-
-        return true;
+        return receipts;
     }
 
     public void flush() {
@@ -822,7 +814,6 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         }
 
         addReward(block);
-        updateTotalDifficulty(block);
 
         track.commit();
 

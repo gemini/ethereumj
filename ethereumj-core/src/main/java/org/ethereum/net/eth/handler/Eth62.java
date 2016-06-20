@@ -6,6 +6,7 @@ import org.ethereum.db.BlockStore;
 import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.message.*;
 import org.ethereum.net.message.ReasonCode;
+import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.sync.SyncManager;
 import org.ethereum.sync.SyncState;
 import org.ethereum.sync.SyncStatistics;
@@ -58,6 +59,9 @@ public class Eth62 extends EthHandler {
     @Autowired
     protected PendingState pendingState;
 
+    @Autowired
+    protected NodeManager nodeManager;
+
     protected EthState ethState = EthState.INIT;
 
     protected SyncState syncState = IDLE;
@@ -73,6 +77,7 @@ public class Eth62 extends EthHandler {
      * Number and hash of best known remote block
      */
     protected BlockIdentifier bestKnownBlock;
+    private BigInteger totalDifficulty;
 
     protected boolean commonAncestorFound = true;
 
@@ -407,17 +412,7 @@ public class Eth62 extends EthHandler {
 
         logger.debug("New block received: block.index [{}]", newBlock.getNumber());
 
-        // skip new block if TD is lower than ours
-        if (isLessThan(newBlockMessage.getDifficultyAsBigInt(), blockchain.getTotalDifficulty())) {
-            logger.trace(
-                    "New block difficulty lower than ours: [{}] vs [{}], skip",
-                    newBlockMessage.getDifficultyAsBigInt(),
-                    blockchain.getTotalDifficulty()
-            );
-            return;
-        }
-
-        channel.getNodeStatistics().setEthTotalDifficulty(newBlockMessage.getDifficultyAsBigInt());
+        updateTotalDifficulty(newBlockMessage.getDifficultyAsBigInt());
 
         updateBestBlock(newBlock);
 
@@ -467,11 +462,13 @@ public class Eth62 extends EthHandler {
     }
 
     private void updateBestBlock(Block block) {
-        bestKnownBlock = new BlockIdentifier(block.getHash(), block.getNumber());
+        updateBestBlock(block.getHeader());
     }
 
     private void updateBestBlock(BlockHeader header) {
-        bestKnownBlock = new BlockIdentifier(header.getHash(), header.getNumber());
+        if (bestKnownBlock == null || header.getNumber() > bestKnownBlock.getNumber()) {
+            bestKnownBlock = new BlockIdentifier(header.getHash(), header.getNumber());
+        }
     }
 
     private void updateBestBlock(List<BlockIdentifier> identifiers) {
@@ -480,6 +477,21 @@ public class Eth62 extends EthHandler {
             if (bestKnownBlock == null || id.getNumber() > bestKnownBlock.getNumber()) {
                 bestKnownBlock = id;
             }
+    }
+
+    @Override
+    public BlockIdentifier getBestKnownBlock() {
+        return bestKnownBlock;
+    }
+
+    private void updateTotalDifficulty(BigInteger totalDiff) {
+        channel.getNodeStatistics().setEthTotalDifficulty(totalDiff);
+        this.totalDifficulty = totalDiff;
+    }
+
+    @Override
+    public BigInteger getTotalDifficulty() {
+        return totalDifficulty != null ? totalDifficulty : channel.getNodeStatistics().getEthTotalDifficulty();
     }
 
     /*************************
@@ -743,32 +755,16 @@ public class Eth62 extends EthHandler {
      *************************/
 
     @Override
-    public void logSyncStats() {
-        if(!logger.isInfoEnabled()) {
-            return;
-        }
-        switch (syncState) {
-            case BLOCK_RETRIEVING: logger.info(
-                    "Peer {}: [ {}, {}, blocks {}, ping {} ms ]",
-                    version,
-                    channel.getPeerIdShort(),
-                    syncState,
-                    syncStats.getBlocksCount(),
-                    String.format("%.2f", channel.getPeerStats().getAvgLatency())); break;
-            case HASH_RETRIEVING: logger.info(
-                    "Peer {}: [ {}, {}, headers {}, ping {} ms ]",
-                    version,
-                    channel.getPeerIdShort(),
-                    syncState,
-                    syncStats.getHeadersCount(),
-                    String.format("%.2f", channel.getPeerStats().getAvgLatency())); break;
-            default: logger.info(
-                    "Peer {}: [ {}, state {}, ping {} ms ]",
-                    version,
-                    channel.getPeerIdShort(),
-                    syncState,
-                    String.format("%.2f", channel.getPeerStats().getAvgLatency()));
-        }
+    public String getSyncStats() {
+
+        return String.format(
+                "Peer %s: [ %s, %16s, ping %6s ms, difficulty %s, best block %s ]",
+                version,
+                channel.getPeerIdShort(),
+                syncState,
+                (int)channel.getPeerStats().getAvgLatency(),
+                getTotalDifficulty(),
+                getBestKnownBlock().getNumber());
     }
 
     protected enum EthState {

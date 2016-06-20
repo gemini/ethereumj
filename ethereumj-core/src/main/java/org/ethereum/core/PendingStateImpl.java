@@ -163,13 +163,8 @@ public class PendingStateImpl implements PendingState {
         }
 
         if (!newTxs.isEmpty()) {
-            EventDispatchThread.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    listener.onPendingTransactionsReceived(newTxs);
-                    listener.onPendingStateChanged(PendingStateImpl.this);
-                }
-            });
+            listener.onPendingTransactionsReceived(newTxs);
+            listener.onPendingStateChanged(PendingStateImpl.this);
         }
         logger.info("Wire transaction list added: {} new, {} valid of received {}, #of known txs: {}", unknownTx, newTxs.size(), transactions.size(), redceivedTxs.size());
     }
@@ -200,13 +195,8 @@ public class PendingStateImpl implements PendingState {
     public synchronized void addPendingTransaction(final Transaction tx) {
         pendingStateTransactions.add(tx);
         executeTx(tx);
-        EventDispatchThread.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                listener.onPendingTransactionsReceived(Collections.singletonList(tx));
-                listener.onPendingStateChanged(PendingStateImpl.this);
-            }
-        });
+        listener.onPendingTransactionsReceived(Collections.singletonList(tx));
+        listener.onPendingStateChanged(PendingStateImpl.this);
     }
 
     @Override
@@ -286,11 +276,7 @@ public class PendingStateImpl implements PendingState {
 
         updateState();
 
-        EventDispatchThread.invokeLater(new Runnable() {
-            public void run() {
-                listener.onPendingStateChanged(PendingStateImpl.this);
-            }
-        });
+        listener.onPendingStateChanged(PendingStateImpl.this);
     }
 
     private void processBestInternal(Block block) {
