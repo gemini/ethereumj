@@ -573,6 +573,7 @@ public class TransactionTest {
         }
     }
 
+    @Ignore
     @Test
     public void receiptErrorTest() throws Exception {
         BlockchainImpl blockchain = ImportLightTest.createBlockchain(SystemProperties.getDefault(), GenesisLoader.loadGenesis(
