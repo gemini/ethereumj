@@ -11,10 +11,7 @@ import org.ethereum.util.blockchain.SolidityContract;
 import org.ethereum.util.blockchain.StandaloneBlockchain;
 import org.ethereum.vm.program.Program;
 import org.h2.engine.SysProperties;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
@@ -22,6 +19,7 @@ import java.math.BigInteger;
 /**
  * Created by Anton Nashatyrev on 20.06.2016.
  */
+@Ignore
 public class DAORescueTest {
 
     private static SystemProperties config = SystemProperties.getDefault();
