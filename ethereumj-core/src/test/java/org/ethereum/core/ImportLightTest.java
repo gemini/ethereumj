@@ -402,6 +402,7 @@ public class ImportLightTest {
     }
 
     @Test
+    @Ignore
     public void deepRecursionTest() throws Exception {
         String contractA =
                 "contract A {" +
