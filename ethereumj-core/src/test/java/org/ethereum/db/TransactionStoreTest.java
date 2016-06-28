@@ -79,6 +79,7 @@ public class TransactionStoreTest {
     }
 
     @Test
+    @Ignore
     public void forkTest() {
         // check that TransactionInfo is always returned from the main chain for
         // transaction which included into blocks from different forks
