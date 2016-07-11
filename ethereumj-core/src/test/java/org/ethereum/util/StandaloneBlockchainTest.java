@@ -5,10 +5,7 @@ import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.util.blockchain.SolidityContract;
 import org.ethereum.util.blockchain.StandaloneBlockchain;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 
 import java.math.BigInteger;
 
@@ -33,6 +30,7 @@ public class StandaloneBlockchainTest {
     }
 
     @Test
+    @Ignore
     public void constructorTest() {
         StandaloneBlockchain sb = new StandaloneBlockchain().withAutoblock(true);
         SolidityContract a = sb.submitNewContract(
