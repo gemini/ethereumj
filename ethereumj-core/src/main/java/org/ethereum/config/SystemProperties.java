@@ -5,6 +5,7 @@ import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigObject;
 import com.typesafe.config.ConfigRenderOptions;
 import org.ethereum.config.blockchain.OlympicConfig;
+import org.ethereum.config.net.MainNetClassicConfig;
 import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.config.net.MordenNetConfig;
 import org.ethereum.config.net.TestNetConfig;
@@ -56,6 +57,7 @@ public class SystemProperties {
     public final static String PROPERTY_PEER_ACTIVE = "peer.active";
     public final static String PROPERTY_DB_RESET = "database.reset";
     public final static String PROPERTY_PEER_DISCOVERY_ENABLED = "peer.discovery.enabled";
+    public final static String PROPERTY_BLOCKCHAIN_NAME = "blockchain.config.name";
 
     /* Testing */
     private final static Boolean DEFAULT_VMTEST_LOAD_LOCAL = false;
@@ -270,6 +272,9 @@ public class SystemProperties {
                 switch(config.getString("blockchain.config.name")) {
                     case "main":
                         blockchainConfig = new MainNetConfig();
+                        break;
+                    case "classic":
+                        blockchainConfig = new MainNetClassicConfig();
                         break;
                     case "olympic":
                         blockchainConfig = new OlympicConfig();

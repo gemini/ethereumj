@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -63,6 +64,10 @@ public class CLIInterface {
                     cliOptions.put(SystemProperties.PROPERTY_PEER_DISCOVERY_ENABLED, false);
                 }
 
+                if (args[i].equals("-classic")) {
+                    cliOptions.put(SystemProperties.PROPERTY_BLOCKCHAIN_NAME, "classic");
+                }
+
                 // override the listen port directory
                 if (args[i].equals("-reset") && i + 1 < args.length) {
                     Boolean resetStr = interpret(args[i + 1]);
@@ -76,7 +81,7 @@ public class CLIInterface {
             }
             SystemProperties.getDefault().overrideParams(cliOptions);
 
-        } catch (Throwable e) {
+        } catch (URISyntaxException e) {
             logger.error("Error parsing command line: [{}]", e.getMessage());
             System.exit(1);
         }
