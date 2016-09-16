@@ -98,7 +98,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
 //        withAccountBalance(txSender.getAddress(), new BigInteger("100000000000000000000000000"));
         addEthereumListener(new EthereumListenerAdapter() {
             @Override
-            public void onBlock(BlockSummary blockSummary, boolean isBestBlock) {
+            public void onBlock(BlockSummary blockSummary) {
                 lastSummary = blockSummary;
             }
         });

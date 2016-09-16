@@ -432,11 +432,10 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         }
 
         if (ret.isSuccessful()) {
-            boolean isBestBlock = (ret == IMPORTED_BEST);
-            listener.onBlock(summary, isBestBlock);
+            listener.onBlock(summary);
             listener.trace(String.format("Block chain size: [ %d ]", this.getSize()));
 
-            if (isBestBlock) {
+            if (ret == IMPORTED_BEST) {
                 eventDispatchThread.invokeLater(new Runnable() {
                     @Override
                     public void run() {
