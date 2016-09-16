@@ -5,14 +5,11 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.JavaType;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.AccountState;
-import org.ethereum.core.Block;
 import org.ethereum.core.Genesis;
 import org.ethereum.db.ByteArrayWrapper;
-import org.ethereum.jsontestsuite.Utils;
 import org.ethereum.trie.SecureTrie;
 import org.ethereum.trie.Trie;
 import org.ethereum.util.ByteUtil;
-import org.spongycastle.util.encoders.Hex;
 
 import java.io.InputStream;
 import java.math.BigInteger;
@@ -22,6 +19,7 @@ import java.util.Map;
 import static org.ethereum.core.Genesis.ZERO_HASH_2048;
 import static org.ethereum.crypto.HashUtil.EMPTY_LIST_HASH;
 import static org.ethereum.util.ByteUtil.wrap;
+import static org.ethereum.core.BlockHeader.NONCE_LENGTH;
 
 public class GenesisLoader {
 
@@ -68,25 +66,45 @@ public class GenesisLoader {
     }
 
 
-    private static Genesis createBlockForJson(GenesisJson genesisJson){
+    private static Genesis createBlockForJson(GenesisJson genesisJson) {
 
-        byte[] nonce       = Utils.parseData(genesisJson.nonce);
-        byte[] difficulty  = Utils.parseData(genesisJson.difficulty);
-        byte[] mixHash     = Utils.parseData(genesisJson.mixhash);
-        byte[] coinbase    = Utils.parseData(genesisJson.coinbase);
+        byte[] nonce       = prepareNonce(ByteUtil.hexStringToBytes(genesisJson.nonce));
+        byte[] difficulty  = ByteUtil.hexStringToBytes(genesisJson.difficulty);
+        byte[] mixHash     = ByteUtil.hexStringToBytes(genesisJson.mixhash);
+        byte[] coinbase    = ByteUtil.hexStringToBytes(genesisJson.coinbase);
 
-        byte[] timestampBytes = Utils.parseData(genesisJson.timestamp);
+        byte[] timestampBytes = ByteUtil.hexStringToBytes(genesisJson.timestamp);
         long   timestamp         = ByteUtil.byteArrayToLong(timestampBytes);
 
-        byte[] parentHash  = Utils.parseData(genesisJson.parentHash);
-        byte[] extraData   = Utils.parseData(genesisJson.extraData);
+        byte[] parentHash  = ByteUtil.hexStringToBytes(genesisJson.parentHash);
+        byte[] extraData   = ByteUtil.hexStringToBytes(genesisJson.extraData);
 
-        byte[] gasLimitBytes    = Utils.parseData(genesisJson.gasLimit);
+        byte[] gasLimitBytes    = ByteUtil.hexStringToBytes(genesisJson.gasLimit);
         long   gasLimit         = ByteUtil.byteArrayToLong(gasLimitBytes);
 
         return new Genesis(parentHash, EMPTY_LIST_HASH, coinbase, ZERO_HASH_2048,
                             difficulty, 0, gasLimit, 0, timestamp, extraData,
                             mixHash, nonce);
+    }
+
+    /**
+     * Prepares nonce to be correct length
+     * @param nonceUnchecked    unchecked, user-provided nonce
+     * @return  correct nonce
+     * @throws RuntimeException when nonce is too long
+     */
+    private static byte[] prepareNonce(byte[] nonceUnchecked) {
+        if (nonceUnchecked.length > 8) {
+            throw new RuntimeException(String.format("Invalid nonce, should be %s length", NONCE_LENGTH));
+        } else if (nonceUnchecked.length == 8) {
+            return nonceUnchecked;
+        }
+        byte[] nonce = new byte[NONCE_LENGTH];
+        int diff = NONCE_LENGTH - nonceUnchecked.length;
+        for (int i = diff; i < NONCE_LENGTH; ++i) {
+            nonce[i] = nonceUnchecked[i - diff];
+        }
+        return nonce;
     }
 
 
@@ -99,7 +117,7 @@ public class GenesisLoader {
             AccountState acctState = new AccountState(
                     config.getBlockchainConfig().getCommonConstants().getInitialNonce(), balance);
 
-            premine.put(wrap(Hex.decode(key)), acctState);
+            premine.put(wrap(ByteUtil.hexStringToBytes(key)), acctState);
         }
 
         return premine;

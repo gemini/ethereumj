@@ -7,6 +7,7 @@ import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.config.blockchain.HomesteadConfig;
 import org.ethereum.config.net.AbstractNetConfig;
 import org.ethereum.config.net.MainNetConfig;
+import org.ethereum.jsontestsuite.suite.JSONReader;
 import org.json.simple.parser.ParseException;
 import org.junit.FixMethodOrder;
 import org.junit.Ignore;
@@ -28,8 +29,8 @@ public class GitHubBlockTest {
         SystemProperties.getDefault().setGenesisInfo("frontier.json");
         SystemProperties.getDefault().setBlockchainConfig(new HomesteadConfig());
 
-        String json = JSONReader.loadJSONFromCommit("BlockchainTests/Homestead/bcTotalDifficultyTest.json", shacommit);
-        GitHubJSONTestSuite.runGitHubJsonSingleBlockTest(json, "sideChainWithNewMaxDifficultyStartingFromBlock3AfterBlock4");
+        String json = JSONReader.loadJSONFromCommit("BlockchainTests/Homestead/bcMultiChainTest.json", shacommit);
+        GitHubJSONTestSuite.runGitHubJsonSingleBlockTest(json, "ChainAtoChainB_BlockHash");
     }
 
     private void runFrontier(String name) throws IOException, ParseException {

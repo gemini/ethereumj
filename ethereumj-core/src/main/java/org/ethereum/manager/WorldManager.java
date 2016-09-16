@@ -4,18 +4,20 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.ByteArrayWrapper;
+import org.ethereum.db.RepositoryImpl;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.client.PeerClient;
 import org.ethereum.net.rlpx.discover.UDPListener;
 import org.ethereum.sync.SyncManager;
-import org.ethereum.net.peerdiscovery.PeerDiscovery;
 import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.server.ChannelManager;
+import org.ethereum.sync.SyncPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -45,13 +47,10 @@ public class WorldManager {
     private Blockchain blockchain;
 
     @Autowired
-    private Repository repository;
+    private RepositoryImpl repository;
 
     @Autowired
     private PeerClient activePeer;
-
-    @Autowired
-    private PeerDiscovery peerDiscovery;
 
     @Autowired
     private BlockStore blockStore;
@@ -69,6 +68,9 @@ public class WorldManager {
     private SyncManager syncManager;
 
     @Autowired
+    private SyncPool pool;
+
+    @Autowired
     private PendingState pendingState;
 
     @Autowired
@@ -79,6 +81,9 @@ public class WorldManager {
 
     @Autowired
     SystemProperties config;
+
+    @Autowired
+    ApplicationContext ctx;
 
     private CountDownLatch initSemaphore = new CountDownLatch(1);
 
@@ -109,12 +114,13 @@ public class WorldManager {
         nodeManager.close();
     }
 
-    public ChannelManager getChannelManager() {
-        return channelManager;
+    public void initSyncing() {
+        syncManager.init();
+        pool.init();
     }
 
-    public PeerDiscovery getPeerDiscovery() {
-        return peerDiscovery;
+    public ChannelManager getChannelManager() {
+        return channelManager;
     }
 
     public EthereumListener getListener() {
@@ -127,10 +133,6 @@ public class WorldManager {
 
     public Blockchain getBlockchain() {
         return blockchain;
-    }
-
-    public void setActivePeer(PeerClient peer) {
-        this.activePeer = peer;
     }
 
     public PeerClient getActivePeer() {
@@ -159,6 +161,7 @@ public class WorldManager {
                 repository.createAccount(key.getData());
                 repository.addBalance(key.getData(), genesis.getPremine().get(key).getBalance());
             }
+            repository.commitBlock(genesis.getHeader());
 
             blockStore.saveBlock(Genesis.getInstance(config), Genesis.getInstance(config).getCumulativeDifficulty(), true);
 
@@ -215,6 +218,8 @@ public class WorldManager {
         channelManager.close();
         logger.info("close: stopping SyncManager ...");
         syncManager.close();
+        logger.info("close: stopping PeerClient ...");
+        activePeer.close();
         logger.info("close: shutting down event dispatch thread used by EventBus ...");
         eventDispatchThread.shutdown();
         logger.info("close: closing Blockchain instance ...");

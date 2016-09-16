@@ -35,7 +35,7 @@ import java.util.Vector;
  *
  *  This class is a Spring Component which makes it convenient to easily get access (autowire) to
  *  all components created within EthereumJ. However almost all this could be done without dealing
- *  with the Spring machinery from withing a simple main method
+ *  with the Spring machinery from within a simple main method
  *
  *  Created by Anton Nashatyrev on 05.02.2016.
  */
@@ -84,7 +84,7 @@ public class BasicSample implements Runnable {
         this.loggerName = loggerName;
     }
 
-    private void setupLogging() {
+    protected void setupLogging() {
         // Turn off all logging to stdout except of sample logging
         LogManager.getRootLogger().removeAppender("stdout");
         ConsoleAppender appender = new ConsoleAppender(stdoutAppender.getLayout());

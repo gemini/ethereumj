@@ -883,6 +883,7 @@ public class RepositoryTest {
         track2.addStorageRow(cow, cowKey1, cowVal1);
         track2.addStorageRow(horse, horseKey1, horseVal1);
         track2.commit();
+        repository.commitBlock(null);
 
         byte[] root2 = repository.getRoot();
 
@@ -890,6 +891,7 @@ public class RepositoryTest {
         track2.addStorageRow(cow, cowKey2, cowVal0);
         track2.addStorageRow(horse, horseKey2, horseVal0);
         track2.commit();
+        repository.commitBlock(null);
 
         byte[] root3 = repository.getRoot();
 
@@ -921,7 +923,6 @@ public class RepositoryTest {
 
 
     @Test // testing for snapshot
-    @Ignore
     public void testMultiThread() throws InterruptedException {
         final RepositoryImpl repository = new RepositoryImpl(new HashMapDB(), new HashMapDB());
 
@@ -947,8 +948,10 @@ public class RepositoryTest {
                 try {
                     int cnt = 1;
                     while(true) {
-                        Repository snap = repository.getSnapshotTo(repository.getRoot()).startTracking();
+                        RepositoryTrack snap = (RepositoryTrack) repository.getSnapshotTo(repository.getRoot()).startTracking();
+//                        snap.addBalance(cow, BigInteger.TEN);
                         snap.addStorageRow(cow, cowKey1, new DataWord(cnt));
+                        snap.rollback();
                         cnt++;
                     }
                 } catch (Throwable e) {
@@ -967,22 +970,29 @@ public class RepositoryTest {
                         Repository track2 = repository.startTracking(); //track
                         DataWord cVal = new DataWord(cnt);
                         track2.addStorageRow(cow, cowKey1, cVal);
+//                        track2.addBalance(cow, BigInteger.ONE);
                         track2.commit();
 
                         repository.flush();
 
+//                        assertEquals(BigInteger.valueOf(cnt), repository.getBalance(cow));
                         assertEquals(cVal, repository.getStorageValue(cow, cowKey1));
                         assertEquals(cowVal0, repository.getStorageValue(cow, cowKey2));
                         cnt++;
                     }
                 } catch (Throwable e) {
                     e.printStackTrace();
+                    try {
+                        repository.addStorageRow(cow, cowKey1, new DataWord(123));
+                    } catch (Exception e1) {
+                        e1.printStackTrace();
+                    }
                     failSema.countDown();
                 }
             }
         }).start();
 
-        failSema.await(10, TimeUnit.SECONDS);
+        failSema.await(5, TimeUnit.SECONDS);
 
         if (failSema.getCount() == 0) {
             throw new RuntimeException("Test failed.");

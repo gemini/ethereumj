@@ -16,6 +16,7 @@ import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.mine.Ethash;
 import org.ethereum.solidity.compiler.CompilationResult;
 import org.ethereum.solidity.compiler.SolidityCompiler;
+import org.ethereum.sync.SyncManager;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.validator.DependentBlockHeaderRuleAdapter;
 import org.ethereum.vm.DataWord;
@@ -26,6 +27,7 @@ import org.spongycastle.util.encoders.Hex;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -84,7 +86,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
         }
     }
 
-    List<PendingTx> submittedTxes = new ArrayList<>();
+    List<PendingTx> submittedTxes = new CopyOnWriteArrayList<>();
 
     public StandaloneBlockchain() {
         withGenesis(GenesisLoader.loadGenesis(
@@ -349,20 +351,31 @@ public class StandaloneBlockchain implements LocalBlockchain {
         }
     }
 
+    public HashMapDB getStateDS() {
+        return stateDS;
+    }
+
+    public HashMapDB getDetailsDS() {
+        return detailsDS;
+    }
+
     private BlockchainImpl createBlockchain(Genesis genesis) {
         IndexedBlockStore blockStore = new IndexedBlockStore();
         blockStore.init(new HashMapDB(), new HashMapDB());
 
-        Repository repository = new RepositoryImpl(new HashMapDB(), new HashMapDB());
+        detailsDS = new HashMapDB();
+        stateDS = new HashMapDB();
+        RepositoryImpl repository = new RepositoryImpl(detailsDS, stateDS, true)
+                .withBlockStore(blockStore);
 
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
         listener = new CompositeEthereumListener();
 
         BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository)
-                .withEthereumListener(listener);
+                .withEthereumListener(listener)
+                .withSyncManager(new SyncManager());
         blockchain.setParentHeaderValidator(new DependentBlockHeaderRuleAdapter());
         blockchain.setProgramInvokeFactory(programInvokeFactory);
-        programInvokeFactory.setBlockchain(blockchain);
 
         blockchain.byTest = true;
 
@@ -384,6 +397,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
         }
 
         track.commit();
+        repository.commitBlock(genesis.getHeader());
 
         blockStore.saveBlock(genesis, genesis.getCumulativeDifficulty(), true);
 
@@ -393,11 +407,11 @@ public class StandaloneBlockchain implements LocalBlockchain {
         return blockchain;
     }
 
-    class SolidityContractImpl implements SolidityContract {
+    public class SolidityContractImpl implements SolidityContract {
         byte[] address;
-        CompilationResult.ContractMetadata compiled;
-        CallTransaction.Contract contract;
-        List<CallTransaction.Contract> relatedContracts = new ArrayList<>();
+        public CompilationResult.ContractMetadata compiled;
+        public CallTransaction.Contract contract;
+        public List<CallTransaction.Contract> relatedContracts = new ArrayList<>();
 
         public SolidityContractImpl(String abi) {
             contract = new CallTransaction.Contract(abi);
@@ -446,8 +460,10 @@ public class StandaloneBlockchain implements LocalBlockchain {
         @Override
         public Object[] callConstFunction(Block callBlock, String functionName, Object... args) {
 
+            CallTransaction.Function func = contract.getByName(functionName);
+            if (func == null) throw new RuntimeException("No function with name '" + functionName + "'");
             Transaction tx = CallTransaction.createCallTransaction(0, 0, 100000000000000L,
-                    Hex.toHexString(getAddress()), 0, contract.getByName(functionName), args);
+                    Hex.toHexString(getAddress()), 0, func, args);
             tx.sign(new byte[32]);
 
             Repository repository = getBlockchain().getRepository().getSnapshotTo(callBlock.getStateRoot()).startTracking();
@@ -463,7 +479,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
                 executor.go();
                 executor.finalization();
 
-                return contract.getByName(functionName).decodeResult(executor.getResult().getHReturn());
+                return func.decodeResult(executor.getResult().getHReturn());
             } finally {
                 repository.rollback();
             }

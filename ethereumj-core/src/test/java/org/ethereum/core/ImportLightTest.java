@@ -15,16 +15,14 @@ import org.ethereum.mine.Ethash;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.validator.DependentBlockHeaderRuleAdapter;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 import org.spongycastle.util.encoders.Hex;
 
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Locale;
 
 /**
  * Created by Anton Nashatyrev on 29.12.2015.
@@ -414,11 +412,133 @@ public class ImportLightTest {
         // no StackOverflowException
     }
 
+    @Test
+    public void prevBlockHashOnFork() throws Exception {
+        String contractA =
+                "contract A {" +
+                "  bytes32 public blockHash;" +
+                "  function a(){" +
+                "    blockHash = block.blockhash(block.number - 1);" +
+                "  }" +
+                "}";
+
+        StandaloneBlockchain bc = new StandaloneBlockchain();
+        SolidityContract a = bc.submitNewContract(contractA);
+        Block b1 = bc.createBlock();
+        Block b2 = bc.createBlock();
+        Block b3 = bc.createBlock();
+        Block b4 = bc.createBlock();
+        Block b5 = bc.createBlock();
+        Block b6 = bc.createBlock();
+        Block b2_ = bc.createForkBlock(b1);
+        a.callFunction("a");
+        Block b3_ = bc.createForkBlock(b2_);
+        Object hash = a.callConstFunction(b3_, "blockHash")[0];
+
+        System.out.println(Hex.toHexString((byte[]) hash));
+        System.out.println(Hex.toHexString(b2_.getHash()));
+
+        // no StackOverflowException
+    }
+
+    @Test
+    @Ignore
+    public void threadRacePendingTest() throws Exception {
+        String contractA =
+                "contract A {" +
+                "  uint[32] public somedata1;" +
+                "  uint[32] public somedata2;" +
+                "  function set1(uint idx, uint val){" +
+                "    somedata1[idx] = val;" +
+                "  }" +
+                "  function set2(uint idx, uint val){" +
+                "    somedata2[idx] = val;" +
+                "  }" +
+                "}";
+
+        final StandaloneBlockchain bc = new StandaloneBlockchain();
+        final StandaloneBlockchain.SolidityContractImpl a = (StandaloneBlockchain.SolidityContractImpl) bc.submitNewContract(contractA);
+        bc.createBlock();
+
+        Block b = null;
+        int cnt = 1;
+
+        final CallTransaction.Function function = a.contract.getByName("set");
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                int cnt = 1;
+                while (cnt++ > 0) {
+                    try {
+                        bc.generatePendingTransactions();
+//                    byte[] encode = function.encode(cnt % 32, cnt);
+//                    Transaction callTx1 = bc.createTransaction(new ECKey(), 0, a.getAddress(), BigInteger.ZERO, encode);
+//                    bc.getPendingState().addPendingTransaction(callTx1);
+//                    Transaction callTx2 = bc.createTransaction(, 0, a.getAddress(), BigInteger.ZERO, encode);
+//                    bc.getPendingState().addPendingTransaction(callTx);
+                        Thread.sleep(10);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }).start();
+
+        Block b_1 = null;
+        while(cnt++ > 0) {
+            long s = System.nanoTime();
+
+            a.callFunction("set1", cnt % 32, cnt);
+            a.callFunction("set2", cnt % 32, cnt);
+            bc.sendEther(new byte[32], BigInteger.ONE);
+            a.callFunction("set1", (cnt + 1) % 32, cnt + 1);
+            a.callFunction("set2", (cnt + 1) % 32, cnt + 1);
+            bc.sendEther(new byte[32], BigInteger.ONE);
+
+            Block prev = b;
+            if (cnt % 5 == 0) {
+                b = bc.createForkBlock(b_1);
+            } else {
+                b = bc.createBlock();
+            }
+            b_1 = prev;
+
+            if (cnt % 3 == 0) {
+                bc.getBlockchain().flush();
+            }
+            long t = System.nanoTime() - s;
+
+
+            System.out.println("" + String.format(Locale.US, "%1$.2f", t / 1_000_000d) + ", " + b.getDifficultyBI() + ", " + b.getShortDescr());
+        }
+
+
+//        SolidityContract a = bc.submitNewContract(contractA);
+//        Block b1 = bc.createBlock();
+//        Block b2 = bc.createBlock();
+//        Block b3 = bc.createBlock();
+//        Block b4 = bc.createBlock();
+//        Block b5 = bc.createBlock();
+//        Block b6 = bc.createBlock();
+//        Block b2_ = bc.createForkBlock(b1);
+//        a.callFunction("a");
+//        Block b3_ = bc.createForkBlock(b2_);
+//        Object hash = a.callConstFunction(b3_, "blockHash")[0];
+//
+//        System.out.println(Hex.toHexString((byte[]) hash));
+//        System.out.println(Hex.toHexString(b2_.getHash()));
+
+        // no StackOverflowException
+    }
+
+
+
+
     public static BlockchainImpl createBlockchain(Genesis genesis) {
         IndexedBlockStore blockStore = new IndexedBlockStore();
         blockStore.init(new HashMapDB(), new HashMapDB());
 
-        Repository repository = new RepositoryImpl(new HashMapDB(), new HashMapDB());
+        RepositoryImpl repository = new RepositoryImpl(new HashMapDB(), new HashMapDB());
 
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
         EthereumListenerAdapter listener = new EthereumListenerAdapter();
@@ -427,7 +547,6 @@ public class ImportLightTest {
                 .withParentBlockHeaderValidator(new CommonConfig().parentHeaderValidator());
         blockchain.setParentHeaderValidator(new DependentBlockHeaderRuleAdapter());
         blockchain.setProgramInvokeFactory(programInvokeFactory);
-        programInvokeFactory.setBlockchain(blockchain);
 
         blockchain.byTest = true;
 
@@ -445,6 +564,7 @@ public class ImportLightTest {
         }
 
         track.commit();
+        repository.commitBlock(genesis.getHeader());
 
         blockStore.saveBlock(genesis, genesis.getCumulativeDifficulty(), true);
 
