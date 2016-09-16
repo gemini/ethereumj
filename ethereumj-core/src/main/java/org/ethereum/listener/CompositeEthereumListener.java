@@ -21,7 +21,7 @@ public class CompositeEthereumListener implements EthereumListener {
 
     @Autowired
     EventDispatchThread eventDispatchThread = EventDispatchThread.getDefault();
-
+    
     List<EthereumListener> listeners = new CopyOnWriteArrayList<>();
 
     public void addListener(EthereumListener listener) {
@@ -44,12 +44,12 @@ public class CompositeEthereumListener implements EthereumListener {
     }
 
     @Override
-    public void onBlock(final BlockSummary blockSummary, final boolean isBestBlock) {
+    public void onBlock(final BlockSummary blockSummary) {
         for (final EthereumListener listener : listeners) {
             eventDispatchThread.invokeLater(new Runnable() {
                 @Override
                 public void run() {
-                    listener.onBlock(blockSummary, isBestBlock);
+                    listener.onBlock(blockSummary);
                 }
             });
         }
