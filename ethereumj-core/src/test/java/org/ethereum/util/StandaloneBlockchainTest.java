@@ -59,6 +59,7 @@ public class StandaloneBlockchainTest {
     }
 
     @Test
+    @Ignore
     public void fixedSizeArrayTest() {
         StandaloneBlockchain sb = new StandaloneBlockchain().withAutoblock(true);
         {
@@ -102,6 +103,7 @@ public class StandaloneBlockchainTest {
     }
 
     @Test
+    @Ignore
     public void encodeTest1() {
         StandaloneBlockchain sb = new StandaloneBlockchain().withAutoblock(true);
         SolidityContract a = sb.submitNewContract(

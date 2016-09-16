@@ -420,6 +420,7 @@ public class ImportLightTest {
     }
 
     @Test
+    @Ignore
     public void prevBlockHashOnFork() throws Exception {
         String contractA =
                 "contract A {" +

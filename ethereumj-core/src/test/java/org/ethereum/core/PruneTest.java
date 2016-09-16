@@ -168,6 +168,7 @@ public class PruneTest {
     }
 
     @Test
+    @Ignore
     public void contractTest() throws Exception {
         // checks that pruning doesn't delete the nodes which were 're-added' later
         // e.g. when a contract variable assigned value V1 the trie acquires node with key K1
@@ -224,6 +225,7 @@ public class PruneTest {
     }
 
     @Test
+    @Ignore
     public void branchTest() throws Exception {
         final int pruneCount = 3;
         SystemProperties.getDefault().overrideParams(
