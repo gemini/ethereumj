@@ -102,6 +102,9 @@ public class VM {
             if (op == null) {
                 throw Program.Exception.invalidOpCode(program.getCurrentOp());
             }
+            if (program.isBannedOpcode(op)) {
+                throw Program.Exception.invalidOpCode(program.getCurrentOp());
+            }
             if (op == DELEGATECALL) {
                 // opcode since Homestead release only
                 if (!config.getBlockchainConfig().getConfigForBlock(program.getNumber().longValue()).

@@ -18,6 +18,7 @@ import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigInteger;
+import java.util.EnumSet;
 import java.util.List;
 
 import static org.apache.commons.lang3.ArrayUtils.getLength;
@@ -70,6 +71,11 @@ public class TransactionExecutor {
     List<LogInfo> logs = null;
 
     boolean localCall = false;
+
+    private EnumSet<OpCode> bannedOpcodes = EnumSet.noneOf(OpCode.class);
+    public void setBannedOpcodes(EnumSet<OpCode> bannedOpcodes) {
+        this.bannedOpcodes = bannedOpcodes;
+    }
 
     public TransactionExecutor(Transaction tx, byte[] coinbase, Repository track, BlockStore blockStore,
                                ProgramInvokeFactory programInvokeFactory, Block currentBlock) {
@@ -255,6 +261,8 @@ public class TransactionExecutor {
 
             // Charge basic cost of the transaction
             program.spendGas(tx.transactionCost(config.getBlockchainConfig(), currentBlock), "TRANSACTION COST");
+
+            program.setBannedOpcodes(bannedOpcodes);
 
             if (config.playVM())
                 vm.play(program);

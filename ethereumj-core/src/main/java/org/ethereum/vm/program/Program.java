@@ -86,6 +86,14 @@ public class Program {
 
     private final SystemProperties config;
 
+    private EnumSet<OpCode> bannedOpcodes = EnumSet.noneOf(OpCode.class);
+    public boolean isBannedOpcode(OpCode op) {
+        return bannedOpcodes.contains(op);
+    }
+    public void setBannedOpcodes(EnumSet<OpCode> bannedOpcodes) {
+        this.bannedOpcodes = bannedOpcodes;
+    }
+
     public Program(byte[] ops, ProgramInvoke programInvoke) {
         this(ops, programInvoke, null);
     }
@@ -417,6 +425,7 @@ public class Program {
 
             VM vm = commonConfig.vm();
             Program program = commonConfig.program(programCode, programInvoke, internalTx);
+            program.setBannedOpcodes(bannedOpcodes);
             vm.play(program);
             result = program.getResult();
 
@@ -539,6 +548,7 @@ public class Program {
 
             VM vm = commonConfig.vm();
             Program program = commonConfig.program(programCode, programInvoke, internalTx);
+            program.setBannedOpcodes(bannedOpcodes);
             vm.play(program);
             result = program.getResult();
 
