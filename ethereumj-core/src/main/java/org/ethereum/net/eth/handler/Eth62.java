@@ -244,8 +244,7 @@ public class Eth62 extends EthHandler {
 
         try {
 
-            if (!Arrays.equals(msg.getGenesisHash(), config.getGenesis().getHash())
-                    || msg.getProtocolVersion() != version.getCode()) {
+            if (!Arrays.equals(msg.getGenesisHash(), config.getGenesis().getHash())) {
                 if (!peerDiscoveryMode) {
                     loggerNet.info("Removing EthHandler for {} due to protocol incompatibility", ctx.channel().remoteAddress());
                 }
@@ -790,13 +789,14 @@ public class Eth62 extends EthHandler {
     public String getSyncStats() {
 
         return String.format(
-                "Peer %s: [ %s, %16s, ping %6s ms, difficulty %s, best block %s ]",
+                "Peer %s: [ %s, %16s, ping %6s ms, difficulty %s, best block %s ]: %s",
                 version,
                 channel.getPeerIdShort(),
                 syncState,
                 (int)channel.getPeerStats().getAvgLatency(),
                 getTotalDifficulty(),
-                getBestKnownBlock().getNumber());
+                getBestKnownBlock().getNumber(),
+                channel.getNodeStatistics().getClientId());
     }
 
     protected enum EthState {
