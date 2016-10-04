@@ -254,6 +254,7 @@ public class PruneTest {
     }
 
     @Test
+    @Ignore
     public void storagePruneTest() throws Exception {
         final int pruneCount = 3;
         SystemProperties.getDefault().overrideParams(

@@ -464,6 +464,7 @@ public class PendingStateTest {
     }
 
     @Test
+    @Ignore
     public void testPrevBlock() throws InterruptedException {
         StandaloneBlockchain bc = new StandaloneBlockchain();
         PendingStateImpl pendingState = (PendingStateImpl) bc.getBlockchain().getPendingState();
