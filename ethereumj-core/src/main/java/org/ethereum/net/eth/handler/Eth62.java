@@ -10,6 +10,8 @@ import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.message.*;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.rlpx.discover.NodeManager;
+import org.ethereum.net.submit.TransactionExecutor;
+import org.ethereum.net.submit.TransactionTask;
 import org.ethereum.sync.SyncManager;
 import org.ethereum.sync.SyncState;
 import org.ethereum.sync.SyncStatistics;
@@ -299,10 +301,23 @@ public class Eth62 extends EthHandler {
         if (!syncDone) return;
 
         if (syncState != HASH_RETRIEVING) {
-            BlockIdentifier first = identifiers.get(0);
-            long lastBlockNumber = identifiers.get(identifiers.size() - 1).getNumber();
-            int maxBlocksAsk = (int) (lastBlockNumber - first.getNumber() + 1);
-            sendGetNewBlockHeaders(first.getHash(), maxBlocksAsk, 0, false);
+            long firstBlockAsk = Long.MAX_VALUE;
+            long lastBlockAsk = 0;
+            byte[] firstBlockHash = null;
+            for (BlockIdentifier identifier : identifiers) {
+                long blockNumber = identifier.getNumber();
+                if (blockNumber < firstBlockAsk) {
+                    firstBlockAsk = blockNumber;
+                    firstBlockHash = identifier.getHash();
+                }
+                if (blockNumber > lastBlockAsk)  {
+                    lastBlockAsk = blockNumber;
+                }
+            }
+            long maxBlocksAsk = lastBlockAsk - firstBlockAsk + 1;
+            if (firstBlockHash != null && maxBlocksAsk > 0 && maxBlocksAsk < MAX_HASHES_TO_SEND) {
+                sendGetNewBlockHeaders(firstBlockHash, (int) maxBlocksAsk, 0, false);
+            }
         }
     }
 
@@ -312,7 +327,11 @@ public class Eth62 extends EthHandler {
         }
 
         List<Transaction> txSet = msg.getTransactions();
-        pendingState.addPendingTransactions(txSet);
+        List<Transaction> newPending = pendingState.addPendingTransactions(txSet);
+        if (!newPending.isEmpty()) {
+            TransactionTask transactionTask = new TransactionTask(newPending, channel.getChannelManager(), channel);
+            TransactionExecutor.instance.submitTransaction(transactionTask);
+        }
     }
 
     protected synchronized void processGetBlockHeaders(GetBlockHeadersMessage msg) {
