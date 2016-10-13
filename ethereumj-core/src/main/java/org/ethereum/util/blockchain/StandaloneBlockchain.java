@@ -1,7 +1,6 @@
 package org.ethereum.util.blockchain;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.core.genesis.GenesisLoader;
@@ -22,6 +21,7 @@ import org.ethereum.validator.DependentBlockHeaderRuleAdapter;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.LogInfo;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
+import org.iq80.leveldb.DBException;
 import org.spongycastle.util.encoders.Hex;
 
 import java.io.IOException;
@@ -44,6 +44,8 @@ public class StandaloneBlockchain implements LocalBlockchain {
     long gasPrice;
     long gasLimit;
     boolean autoBlock;
+    long dbDelay = 0;
+    long totalDbHits = 0;
     List<Pair<byte[], BigInteger>> initialBallances = new ArrayList<>();
     int blockGasIncreasePercent = 0;
     private HashMapDB detailsDS;
@@ -150,6 +152,11 @@ public class StandaloneBlockchain implements LocalBlockchain {
      */
     public StandaloneBlockchain withBlockGasIncrease(int blockGasIncreasePercent) {
         this.blockGasIncreasePercent = blockGasIncreasePercent;
+        return this;
+    }
+
+    public StandaloneBlockchain withDbDelay(long dbDelay) {
+        this.dbDelay = dbDelay;
         return this;
     }
 
@@ -359,12 +366,16 @@ public class StandaloneBlockchain implements LocalBlockchain {
         return detailsDS;
     }
 
+    public long getTotalDbHits() {
+        return totalDbHits;
+    }
+
     private BlockchainImpl createBlockchain(Genesis genesis) {
         IndexedBlockStore blockStore = new IndexedBlockStore();
-        blockStore.init(new HashMapDB(), new HashMapDB());
+        blockStore.init(new SlowHashMapDB(), new SlowHashMapDB());
 
-        detailsDS = new HashMapDB();
-        stateDS = new HashMapDB();
+        detailsDS = new SlowHashMapDB();
+        stateDS = new SlowHashMapDB();
         RepositoryImpl repository = new RepositoryImpl(detailsDS, stateDS, true)
                 .withBlockStore(blockStore);
 
@@ -565,6 +576,42 @@ public class StandaloneBlockchain implements LocalBlockchain {
         public byte[] getStorageSlot(byte[] slot) {
             DataWord ret = getBlockchain().getRepository().getContractDetails(contractAddr).get(new DataWord(slot));
             return ret.getData();
+        }
+    }
+
+     class SlowHashMapDB extends HashMapDB {
+        private void sleep(int cnt) {
+            totalDbHits += cnt;
+            if (dbDelay == 0) return;
+            try {
+                Thread.sleep(dbDelay * cnt);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        @Override
+        public synchronized void delete(byte[] arg0) throws DBException {
+            super.delete(arg0);
+            sleep(1);
+        }
+
+        @Override
+        public synchronized byte[] get(byte[] arg0) throws DBException {
+            sleep(1);
+            return super.get(arg0);
+        }
+
+        @Override
+        public synchronized byte[] put(byte[] key, byte[] value) throws DBException {
+            sleep(1);
+            return super.put(key, value);
+        }
+
+        @Override
+        public synchronized void updateBatch(Map<byte[], byte[]> rows) {
+            sleep(rows.size() / 2);
+            super.updateBatch(rows);
         }
     }
 }
