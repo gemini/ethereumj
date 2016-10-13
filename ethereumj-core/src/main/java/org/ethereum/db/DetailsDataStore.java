@@ -51,7 +51,10 @@ public class DetailsDataStore {
 
             if (removes.contains(wrappedKey)) return null;
             byte[] data = db.get(key);
-            if (data == null) return null;
+            if (data == null) {
+                removes.add(wrappedKey); // keeps it from being looked up again next time
+                return null;
+            }
 
             ContractDetailsImpl detailsImpl = commonConfig.contractDetailsImpl();
             detailsImpl.setDataSource(db.getDb());
