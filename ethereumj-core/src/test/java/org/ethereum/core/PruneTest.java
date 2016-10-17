@@ -28,6 +28,7 @@ import static org.ethereum.util.blockchain.EtherUtil.convert;
 /**
  * Created by Anton Nashatyrev on 05.07.2016.
  */
+@Ignore("EW: intentionally broke pruning to speed up block processing")
 public class PruneTest {
 
     @BeforeClass
