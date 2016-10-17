@@ -449,6 +449,7 @@ public class ImportLightTest {
     }
 
     @Test
+    @Ignore
     public void rollbackInternalTx() throws Exception {
         String contractA =
                 "contract A {" +
@@ -479,6 +480,7 @@ public class ImportLightTest {
     }
 
     @Test()
+    @Ignore
     public void selfdestructAttack() throws Exception {
         String contractSrc = "" +
                 "contract B {" +
