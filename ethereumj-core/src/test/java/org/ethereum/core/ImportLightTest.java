@@ -443,10 +443,72 @@ public class ImportLightTest {
         Block b3_ = bc.createForkBlock(b2_);
         Object hash = a.callConstFunction(b3_, "blockHash")[0];
 
-        System.out.println(Hex.toHexString((byte[]) hash));
-        System.out.println(Hex.toHexString(b2_.getHash()));
+        Assert.assertArrayEquals((byte[]) hash, b2_.getHash());
 
         // no StackOverflowException
+    }
+
+    @Test
+    public void rollbackInternalTx() throws Exception {
+        String contractA =
+                "contract A {" +
+                "  uint public a;" +
+                "  uint public b;" +
+                "  function f() {" +
+                "    b = 1;" +
+                "    this.call(bytes4(sha3('exception()')));" +
+                "    a = 2;" +
+                "  }" +
+
+                "  function exception() {" +
+                "    b = 2;" +
+                "    throw;" +
+                "  }" +
+                "}";
+
+        StandaloneBlockchain bc = new StandaloneBlockchain();
+        SolidityContract a = bc.submitNewContract(contractA);
+        bc.createBlock();
+        a.callFunction("f");
+        bc.createBlock();
+        Object av = a.callConstFunction("a")[0];
+        Object bv = a.callConstFunction("b")[0];
+
+        assert BigInteger.valueOf(2).equals(av);
+        assert BigInteger.valueOf(1).equals(bv);
+    }
+
+    @Test()
+    public void selfdestructAttack() throws Exception {
+        String contractSrc = "" +
+                "contract B {" +
+                "  function suicide(address benefic) {" +
+                "    selfdestruct(benefic);" +
+                "  }" +
+                "}" +
+                "contract A {" +
+                "  uint public a;" +
+                "  function f() {" +
+                "    B b = new B();" +
+                "    for (uint i = 0; i < 3500; i++) {" +
+                "      b.suicide(address(i));" +
+                "    }" +
+                "    a = 2;" +
+                "  }" +
+                "}";
+
+        StandaloneBlockchain bc = new StandaloneBlockchain()
+                .withGasLimit(1_000_000_000L)
+                .withDbDelay(0);
+        SolidityContract a = bc.submitNewContract(contractSrc, "A");
+        bc.createBlock();
+        a.callFunction("f");
+        bc.createBlock();
+        String stateRoot = Hex.toHexString(bc.getBlockchain().getRepository().getRoot());
+        Assert.assertEquals("82d5bdb6531e26011521da5601481c9dbef326aa18385f2945fd77bee288ca31", stateRoot);
+        Object av = a.callConstFunction("a")[0];
+        assert BigInteger.valueOf(2).equals(av);
+        assert bc.getTotalDbHits() < 8300; // reduce this assertion if you make further optimizations
     }
 
     @Test

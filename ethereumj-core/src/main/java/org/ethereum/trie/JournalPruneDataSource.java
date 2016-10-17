@@ -86,7 +86,8 @@ public class JournalPruneDataSource implements KeyValueDataSource {
     private void incRef(ByteArrayWrapper keyW) {
         Ref cnt = refCount.get(keyW);
         if (cnt == null) {
-            cnt = new Ref(src.get(keyW.getData()) != null);
+            // cnt = new Ref(src.get(keyW.getData()) != null);
+            cnt = new Ref(true); // save a disk lookup at the expense of DB cruft if this block gets rolled back
             refCount.put(keyW, cnt);
         }
         cnt.journalRefs++;
