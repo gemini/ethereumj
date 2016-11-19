@@ -332,7 +332,7 @@ public class ImportLightTest {
         System.out.println("Ret = " + ret);
     }
 
-
+    @Ignore
     @Test
     public void createContractFork() throws Exception {
         //  #1 (Parent) --> #2 --> #3 (Child) ----------------------> #4 (call Child)
