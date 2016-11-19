@@ -549,7 +549,7 @@ public class JsonRpcImpl implements JsonRpc {
             Account account = getAccount(from);
             if (account == null) throw new RuntimeException("No account " + from);
 
-            tx.sign(account.getEcKey().getPrivKeyBytes());
+            tx.sign(account.getEcKey());
 
             eth.submitTransaction(tx);
 
@@ -860,7 +860,7 @@ public class JsonRpcImpl implements JsonRpc {
         try {
             SolidityCompiler.Result res = solidityCompiler.compileSrc(
                     contract.getBytes(), true, true, SolidityCompiler.Options.ABI, SolidityCompiler.Options.BIN);
-            if (!res.errors.isEmpty()) {
+            if (res.isFailed()) {
                 throw new RuntimeException("Compilation error: " + res.errors);
             }
             org.ethereum.solidity.compiler.CompilationResult result = org.ethereum.solidity.compiler.CompilationResult.parse(res.output);

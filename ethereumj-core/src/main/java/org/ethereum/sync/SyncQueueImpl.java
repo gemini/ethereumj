@@ -15,14 +15,21 @@ import java.util.*;
 public class SyncQueueImpl implements SyncQueueIfc {
     static int MAX_CHAIN_LEN = 192;
 
-    class HeadersRequestImpl implements HeadersRequest {
+    static class HeadersRequestImpl implements HeadersRequest {
         public HeadersRequestImpl(long start, int count, boolean reverse) {
             this.start = start;
             this.count = count;
             this.reverse = reverse;
         }
 
+        public HeadersRequestImpl(byte[] hash, int count, boolean reverse) {
+            this.hash = hash;
+            this.count = count;
+            this.reverse = reverse;
+        }
+
         private long start;
+        private byte[] hash;
         private int count;
 
         private boolean reverse;
@@ -42,6 +49,11 @@ public class SyncQueueImpl implements SyncQueueIfc {
         }
 
         @Override
+        public byte[] getHash() {
+            return hash;
+        }
+
+        @Override
         public int getCount() {
             return count;
         }
@@ -52,7 +64,7 @@ public class SyncQueueImpl implements SyncQueueIfc {
         }
     }
 
-    class BlocksRequestImpl implements BlocksRequest {
+    static class BlocksRequestImpl implements BlocksRequest {
         private List<BlockHeaderWrapper> blockHeaders = new ArrayList<>();
 
         public BlocksRequestImpl() {

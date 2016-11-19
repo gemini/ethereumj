@@ -6,10 +6,10 @@ import org.ethereum.core.*;
 import org.ethereum.core.genesis.GenesisLoader;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.datasource.HashMapDB;
+import org.ethereum.datasource.MapDB;
+import org.ethereum.db.RepositoryRoot;
 import org.ethereum.db.ByteArrayWrapper;
-import org.ethereum.db.DetailsDataStore;
 import org.ethereum.db.IndexedBlockStore;
-import org.ethereum.db.RepositoryImpl;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
@@ -51,7 +51,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
     int blockGasIncreasePercent = 0;
     private HashMapDB detailsDS;
     private HashMapDB storageDS;
-    private HashMapDB stateDS;
+    private MapDB stateDS;
     private BlockSummary lastSummary;
 
     class PendingTx {
@@ -294,7 +294,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
     private SolidityContractImpl createContract(String soliditySrc, String contractName) {
         try {
             SolidityCompiler.Result compileRes = SolidityCompiler.compile(soliditySrc.getBytes(), true, SolidityCompiler.Options.ABI, SolidityCompiler.Options.BIN);
-            if (!compileRes.errors.isEmpty()) throw new RuntimeException("Compile error: " + compileRes.errors);
+            if (compileRes.isFailed()) throw new RuntimeException("Compile result: " + compileRes.errors);
             CompilationResult result = CompilationResult.parse(compileRes.output);
             if (contractName == null) {
                 if (result.contracts.size() > 1) {
@@ -361,7 +361,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
         }
     }
 
-    public HashMapDB getStateDS() {
+    public MapDB getStateDS() {
         return stateDS;
     }
 
@@ -383,17 +383,15 @@ public class StandaloneBlockchain implements LocalBlockchain {
 
         detailsDS = new SlowHashMapDB();
         storageDS = new SlowHashMapDB();
-        stateDS = new SlowHashMapDB();
-        DetailsDataStore detailsDataStore = new DetailsDataStore().withDb(detailsDS, storageDS);
-        RepositoryImpl repository = new RepositoryImpl(detailsDataStore, stateDS, true)
-                .withBlockStore(blockStore);
+        stateDS = new MapDB();
+        RepositoryRoot repository = new RepositoryRoot(stateDS);
 
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
         listener = new CompositeEthereumListener();
 
         BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository)
                 .withEthereumListener(listener)
-                .withSyncManager(new SyncManager());
+                .withSyncManager(new SyncManager(null, null));
         blockchain.setParentHeaderValidator(new DependentBlockHeaderRuleAdapter());
         blockchain.setProgramInvokeFactory(programInvokeFactory);
 
@@ -415,7 +413,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
         }
 
         track.commit();
-        repository.commitBlock(genesis.getHeader());
+        repository.commit();
 
         blockStore.saveBlock(genesis, genesis.getCumulativeDifficulty(), true);
 

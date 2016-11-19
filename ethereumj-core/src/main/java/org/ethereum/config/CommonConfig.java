@@ -4,13 +4,14 @@ import org.ethereum.core.Block;
 import org.ethereum.core.Repository;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.TransactionExecutor;
+import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.datasource.LevelDbDataSource;
 import org.ethereum.datasource.mapdb.MapDBFactory;
 import org.ethereum.datasource.mapdb.MapDBFactoryImpl;
+import org.ethereum.datasource.LegacySourceAdapter;
+import org.ethereum.db.RepositoryRoot;
 import org.ethereum.db.BlockStore;
-import org.ethereum.db.ContractDetailsImpl;
-import org.ethereum.db.RepositoryTrack;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.validator.*;
 import org.ethereum.vm.VM;
@@ -36,6 +37,8 @@ import static java.util.Arrays.asList;
 public class CommonConfig {
     private static final Logger logger = LoggerFactory.getLogger("general");
 
+    public static final byte[] FASTSYNC_DB_KEY = HashUtil.sha3("Key in state DB indicating fastsync in progress".getBytes());
+
     private static CommonConfig defaultInstance;
 
     public static CommonConfig getDefault() {
@@ -55,6 +58,17 @@ public class CommonConfig {
         return new Initializer();
     }
 
+
+    @Bean @Primary
+    public Repository repository() {
+        return new RepositoryRoot(new LegacySourceAdapter(stateDS()));
+    }
+
+    @Bean @Scope("prototype")
+    public Repository repository(byte[] stateRoot) {
+        return new RepositoryRoot(new LegacySourceAdapter(stateDS()), stateRoot);
+    }
+
     @Bean
     @Scope("prototype")
     @Primary
@@ -70,6 +84,20 @@ public class CommonConfig {
         } finally {
             logger.info(dataSource + " key-value data source created.");
         }
+    }
+
+    @Bean
+    public KeyValueDataSource stateDS() {
+        KeyValueDataSource ret = keyValueDataSource();
+        ret.setName("state");
+        ret.init();
+
+        if (ret.get(FASTSYNC_DB_KEY) != null) {
+            logger.warn("Last fastsync was interrupted. Removing state db...");
+            ((LevelDbDataSource)ret).reset();
+        }
+
+        return ret;
     }
 
     @Bean
@@ -91,18 +119,6 @@ public class CommonConfig {
     @Scope("prototype")
     public Program program(byte[] ops, ProgramInvoke programInvoke, Transaction transaction) {
         return new Program(ops, programInvoke, transaction, systemProperties());
-    }
-
-    @Bean
-    @Scope("prototype")
-    public ContractDetailsImpl contractDetailsImpl() {
-        return new ContractDetailsImpl(this, systemProperties());
-    }
-
-    @Bean
-    @Scope("prototype")
-    public RepositoryTrack repositoryTrack(Repository parent) {
-        return new RepositoryTrack(parent);
     }
 
     @Bean
