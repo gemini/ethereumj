@@ -4,7 +4,6 @@ import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.ContractDetails;
-import org.ethereum.db.RepositoryTrack;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.vm.*;
@@ -242,10 +241,11 @@ public class TransactionExecutor {
 
             // reset storage if the contract with the same address already exists
             // TCK test case only - normally this is near-impossible situation in the real network
-            ContractDetails contractDetails = program.getStorage().getContractDetails(newContractAddress);
-            for (DataWord key : contractDetails.getStorageKeys()) {
-                program.storageSave(key, DataWord.ZERO);
-            }
+            // TODO make via Trie.clear() without keyset
+//            ContractDetails contractDetails = program.getStorage().getContractDetails(newContractAddress);
+//            for (DataWord key : contractDetails.getStorageKeys()) {
+//                program.storageSave(key, DataWord.ZERO);
+//            }
         }
 
         BigInteger endowment = toBI(tx.getValue());
@@ -255,48 +255,54 @@ public class TransactionExecutor {
     public void go() {
         if (!readyToExecute) return;
 
-        // TODO: transaction call for pre-compiled  contracts
-        if (vm == null) return;
-
         try {
 
-            // Charge basic cost of the transaction
-            program.spendGas(tx.transactionCost(config.getBlockchainConfig(), currentBlock), "TRANSACTION COST");
+            if (vm != null) {
 
-            program.setBannedOpcodes(bannedOpcodes);
+                program.setBannedOpcodes(bannedOpcodes);
+                // Charge basic cost of the transaction
+                program.spendGas(tx.transactionCost(config.getBlockchainConfig(), currentBlock), "TRANSACTION COST");
 
-            if (config.playVM())
-                vm.play(program);
+                if (config.playVM())
+                    vm.play(program);
 
-            result = program.getResult();
-            m_endGas = toBI(tx.getGasLimit()).subtract(toBI(program.getResult().getGasUsed()));
+                result = program.getResult();
+                m_endGas = toBI(tx.getGasLimit()).subtract(toBI(program.getResult().getGasUsed()));
 
-            if (tx.isContractCreation()) {
-
-                int returnDataGasValue = getLength(program.getResult().getHReturn()) *
-                        config.getBlockchainConfig().getConfigForBlock(currentBlock.getNumber()).getGasCost().getCREATE_DATA();
-                if (m_endGas.compareTo(BigInteger.valueOf(returnDataGasValue)) >= 0) {
-
-                    m_endGas = m_endGas.subtract(BigInteger.valueOf(returnDataGasValue));
-                    cacheTrack.saveCode(tx.getContractAddress(), result.getHReturn());
-                } else {
-                    if (!config.getBlockchainConfig().getConfigForBlock(currentBlock.getNumber()).
-                            getConstants().createEmptyContractOnOOG()) {
-                        program.setRuntimeFailure(Program.Exception.notEnoughSpendingGas("No gas to return just created contract",
-                                returnDataGasValue, program));
-                        result = program.getResult();
+                if (tx.isContractCreation()) {
+                    int returnDataGasValue = getLength(program.getResult().getHReturn()) *
+                            config.getBlockchainConfig().getConfigForBlock(currentBlock.getNumber()).getGasCost().getCREATE_DATA();
+                    if (m_endGas.compareTo(BigInteger.valueOf(returnDataGasValue)) >= 0) {
+                        m_endGas = m_endGas.subtract(BigInteger.valueOf(returnDataGasValue));
+                        cacheTrack.saveCode(tx.getContractAddress(), result.getHReturn());
+                    } else {
+                        if (!config.getBlockchainConfig().getConfigForBlock(currentBlock.getNumber()).
+                                getConstants().createEmptyContractOnOOG()) {
+                            program.setRuntimeFailure(Program.Exception.notEnoughSpendingGas("No gas to return just created contract",
+                                    returnDataGasValue, program));
+                            result = program.getResult();
+                        }
+                        result.setHReturn(EMPTY_BYTE_ARRAY);
                     }
-                    result.setHReturn(EMPTY_BYTE_ARRAY);
+                }
+
+                String err = config.getBlockchainConfig().getConfigForBlock(currentBlock.getNumber()).
+                        validateTransactionChanges(blockStore, currentBlock, tx, null);
+                if (err != null) {
+                    program.setRuntimeFailure(new RuntimeException("Transaction changes validation failed: " + err));
+                }
+
+
+                if (result.getException() != null) {
+                    result.getDeleteAccounts().clear();
+                    result.getLogInfoList().clear();
+                    result.resetFutureRefund();
+
+                    throw result.getException();
                 }
             }
 
-            if (result.getException() != null) {
-                result.getDeleteAccounts().clear();
-                result.getLogInfoList().clear();
-                result.resetFutureRefund();
-
-                throw result.getException();
-            }
+            cacheTrack.commit();
 
         } catch (Throwable e) {
 
@@ -310,17 +316,6 @@ public class TransactionExecutor {
 
     public TransactionExecutionSummary finalization() {
         if (!readyToExecute) return null;
-
-        String err = config.getBlockchainConfig().getConfigForBlock(currentBlock.getNumber()).
-                validateTransactionChanges(blockStore, currentBlock, tx, (RepositoryTrack) cacheTrack);
-        if (err != null) {
-            execError(err);
-            m_endGas = toBI(tx.getGasLimit());
-            cacheTrack.rollback();
-            return null;
-        }
-
-        cacheTrack.commit();
 
         // Should include only LogInfo's that was added during not rejected transactions
         List<LogInfo> notRejectedLogInfos = new ArrayList<>();
@@ -351,11 +346,12 @@ public class TransactionExecutor {
 
             ContractDetails contractDetails = track.getContractDetails(addr);
             if (contractDetails != null) {
-                summaryBuilder.storageDiff(track.getContractDetails(addr).getStorage());
-
-                if (program != null) {
-                    summaryBuilder.touchedStorage(contractDetails.getStorage(), program.getStorageDiff());
-                }
+                // TODO
+//                summaryBuilder.storageDiff(track.getContractDetails(addr).getStorage());
+//
+//                if (program != null) {
+//                    summaryBuilder.touchedStorage(contractDetails.getStorage(), program.getStorageDiff());
+//                }
             }
 
             if (result.getException() != null) {

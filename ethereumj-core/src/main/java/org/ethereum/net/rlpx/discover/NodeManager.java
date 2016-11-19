@@ -54,8 +54,8 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
 
     NodeTable table;
     private Map<String, NodeHandler> nodeHandlerMap = new HashMap<>();
-    ECKey key;
-    Node homeNode;
+    final ECKey key;
+    final Node homeNode;
     private List<Node> bootNodes;
 
     // option to handle inbounds only from known peers (i.e. which were discovered by ourselves)
@@ -195,16 +195,27 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
         return (addr == null ? address.getHostString() : addr.getHostAddress()) + ":" + address.getPort();
     }
 
-    synchronized  NodeHandler getNodeHandler(Node n) {
+    public synchronized NodeHandler getNodeHandler(Node n) {
         String key = getKey(n);
         NodeHandler ret = nodeHandlerMap.get(key);
         if (ret == null) {
             trimTable();
             ret = new NodeHandler(n ,this);
             nodeHandlerMap.put(key, ret);
-            logger.debug(" +++ New node: " + ret);
-            ethereumListener.onNodeDiscovered(ret.getNode());
+            logger.debug(" +++ New node: " + ret + " " + n);
+            if (!n.isDiscoveryNode() && !n.getHexId().equals(homeNode.getHexId())) {
+                ethereumListener.onNodeDiscovered(ret.getNode());
+            }
+        } else if (ret.getNode().isDiscoveryNode() && !n.isDiscoveryNode()) {
+            // we found discovery node with same host:port,
+            // replace node with correct nodeId
+            ret.node = n;
+            if (!n.getHexId().equals(homeNode.getHexId())) {
+                ethereumListener.onNodeDiscovered(ret.getNode());
+            }
+            logger.debug(" +++ Found real nodeId for discovery endpoint {}", n);
         }
+
         return ret;
     }
 
@@ -301,44 +312,6 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
     }
 
     /**
-     * Returns list of unused Eth nodes with highest total difficulty<br>
-     *     Search criteria:
-     *     <ul>
-     *         <li>not presented in {@code usedIds} collection</li>
-     *         <li>eth status processing succeeded</li>
-     *         <li>difficulty is higher than {@code lowerDifficulty}</li>
-     *     </ul>
-     *
-     *
-     * @param usedIds collections of ids which are excluded from results
-     * @param lowerDifficulty nodes having TD lower than this value are sorted out
-     * @param limit max size of returning list
-     *
-     * @return list of nodes with highest difficulty, ordered by TD in desc order
-     */
-    public List<NodeHandler> getBestEthNodes(
-            final Set<String> usedIds,
-            final BigInteger lowerDifficulty,
-            int limit
-    ) {
-        return getNodes(new Functional.Predicate<NodeHandler>() {
-            @Override
-            public boolean test(NodeHandler handler) {
-                if (usedIds.contains(handler.getNode().getHexId())) {
-                    return false;
-                }
-
-                if (handler.getNodeStatistics().isPredefined()) return true;
-
-                if (handler.getNodeStatistics().getEthTotalDifficulty() == null) {
-                    return false;
-                }
-                return handler.getNodeStatistics().getEthTotalDifficulty().compareTo(lowerDifficulty) > 0;
-            }
-        }, limit);
-    }
-
-    /**
      * Returns limited list of nodes matching {@code predicate} criteria<br>
      * The nodes are sorted then by their totalDifficulties
      *
@@ -347,7 +320,7 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
      *
      * @return list of nodes matching criteria
      */
-    private List<NodeHandler> getNodes(
+    public List<NodeHandler> getNodes(
             Functional.Predicate<NodeHandler> predicate,
             int limit    ) {
         ArrayList<NodeHandler> filtered = new ArrayList<>();
@@ -405,7 +378,7 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
                 sb.append(nodeHandler).append("\t").append(nodeHandler.getNodeStatistics()).append("\n");
             } else {
                 zeroReputCount++;
-            }
+        }
         }
         sb.append("0 reputation: ").append(zeroReputCount).append(" nodes.\n");
         return sb.toString();

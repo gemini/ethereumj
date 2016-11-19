@@ -2,11 +2,11 @@ package org.ethereum.core;
 
 import org.ethereum.config.CommonConfig;
 import org.ethereum.datasource.HashMapDB;
+import org.ethereum.datasource.MapDB;
+import org.ethereum.db.RepositoryRoot;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.IndexedBlockStore;
-import org.ethereum.db.RepositoryImpl;
 import org.ethereum.listener.EthereumListenerAdapter;
-import org.ethereum.manager.AdminInfo;
 import org.ethereum.validator.DependentBlockHeaderRuleAdapter;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
 import org.junit.Before;
@@ -21,7 +21,6 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.HashMap;
 import java.util.List;
 
 import static org.ethereum.util.BIUtil.toBI;
@@ -106,7 +105,7 @@ public class PendingStateLongRunTest {
         IndexedBlockStore blockStore = new IndexedBlockStore();
         blockStore.init(new HashMapDB(), new HashMapDB());
 
-        Repository repository = new RepositoryImpl(new HashMapDB(), new HashMapDB());
+        Repository repository = new RepositoryRoot(new MapDB());
 
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
 

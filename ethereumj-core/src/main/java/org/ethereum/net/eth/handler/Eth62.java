@@ -1,5 +1,7 @@
 package org.ethereum.net.eth.handler;
 
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.SettableFuture;
 import io.netty.channel.ChannelHandlerContext;
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.SystemProperties;
@@ -43,14 +45,14 @@ import static org.spongycastle.util.encoders.Hex.toHexString;
  * @author Mikhail Kalinin
  * @since 04.09.2015
  */
-@Component
+@Component("Eth62")
 @Scope("prototype")
 public class Eth62 extends EthHandler {
 
     protected static final int MAX_HASHES_TO_SEND = 65536;
 
-    private final static Logger logger = LoggerFactory.getLogger("sync");
-    private final static Logger loggerNet = LoggerFactory.getLogger("net");
+    protected final static Logger logger = LoggerFactory.getLogger("sync");
+    protected final static Logger loggerNet = LoggerFactory.getLogger("net");
 
     @Autowired
     protected BlockStore blockstore;
@@ -82,6 +84,7 @@ public class Eth62 extends EthHandler {
      * or in case when peer is disconnected
      */
     protected final List<BlockHeaderWrapper> sentHeaders = Collections.synchronizedList(new ArrayList<BlockHeaderWrapper>());
+    protected SettableFuture<List<Block>> futureBlocks;
 
     protected final SyncStatistics syncStats = new SyncStatistics();
 
@@ -89,14 +92,25 @@ public class Eth62 extends EthHandler {
 
     private Map<Long, byte[]> blockHashCheck;
 
+    private static final EthVersion version = V62;
+
     public Eth62() {
-        super(V62);
+        this(version);
+    }
+
+    Eth62(final EthVersion version) {
+        super(version);
     }
 
     @Autowired
     public Eth62(final SystemProperties config, final Blockchain blockchain,
                  final CompositeEthereumListener ethereumListener) {
-        super(V62, config, blockchain, ethereumListener);
+        this(version, config, blockchain, ethereumListener);
+    }
+
+    Eth62(final EthVersion version, final SystemProperties config,
+          final Blockchain blockchain, final CompositeEthereumListener ethereumListener) {
+        super(version, config, blockchain, ethereumListener);
         maxHashesAsk = config.maxHashesAsk();
     }
 
@@ -141,7 +155,7 @@ public class Eth62 extends EthHandler {
 
     @Override
     public synchronized void sendStatus() {
-        byte protocolVersion = version.getCode();
+        byte protocolVersion = getVersion().getCode();
         int networkId = config.networkId();
 
         BigInteger totalDifficulty = blockchain.getTotalDifficulty();
@@ -171,7 +185,7 @@ public class Eth62 extends EthHandler {
     }
 
     @Override
-    public synchronized void sendGetBlockHeaders(long blockNumber, int maxBlocksAsk, boolean reverse) {
+    public synchronized ListenableFuture<List<BlockHeader>> sendGetBlockHeaders(long blockNumber, int maxBlocksAsk, boolean reverse) {
 
         if(logger.isTraceEnabled()) logger.trace(
                 "Peer {}: queue GetBlockHeaders, blockNumber [{}], maxBlocksAsk [{}]",
@@ -181,20 +195,24 @@ public class Eth62 extends EthHandler {
         );
 
         GetBlockHeadersMessage headersRequest = new GetBlockHeadersMessage(blockNumber, null, maxBlocksAsk, 0, reverse);
-        headerRequests.add(new GetBlockHeadersMessageWrapper(headersRequest));
+        GetBlockHeadersMessageWrapper messageWrapper = new GetBlockHeadersMessageWrapper(headersRequest);
+        headerRequests.add(messageWrapper);
 
         sendNextHeaderRequest();
+
+        return messageWrapper.getFutureHeaders();
     }
 
-    protected synchronized void sendGetBlockHeaders(byte[] blockHash, int maxBlocksAsk, int skip, boolean reverse) {
-        sendGetBlockHeaders(blockHash, maxBlocksAsk, skip, reverse, false);
+    @Override
+    public synchronized ListenableFuture<List<BlockHeader>> sendGetBlockHeaders(byte[] blockHash, int maxBlocksAsk, int skip, boolean reverse) {
+        return sendGetBlockHeaders(blockHash, maxBlocksAsk, skip, reverse, false);
     }
 
     protected synchronized void sendGetNewBlockHeaders(byte[] blockHash, int maxBlocksAsk, int skip, boolean reverse) {
         sendGetBlockHeaders(blockHash, maxBlocksAsk, skip, reverse, true);
     }
 
-    protected synchronized void sendGetBlockHeaders(byte[] blockHash, int maxBlocksAsk, int skip, boolean reverse, boolean newHashes) {
+    protected synchronized ListenableFuture<List<BlockHeader>> sendGetBlockHeaders(byte[] blockHash, int maxBlocksAsk, int skip, boolean reverse, boolean newHashes) {
 
         if(logger.isTraceEnabled()) logger.trace(
                 "Peer {}: queue GetBlockHeaders, blockHash [{}], maxBlocksAsk [{}], skip[{}], reverse [{}]",
@@ -204,13 +222,16 @@ public class Eth62 extends EthHandler {
         );
 
         GetBlockHeadersMessage headersRequest = new GetBlockHeadersMessage(0, blockHash, maxBlocksAsk, skip, reverse);
-        headerRequests.add(new GetBlockHeadersMessageWrapper(headersRequest, newHashes));
+        GetBlockHeadersMessageWrapper messageWrapper = new GetBlockHeadersMessageWrapper(headersRequest, newHashes);
+        headerRequests.add(messageWrapper);
 
         sendNextHeaderRequest();
+
+        return messageWrapper.getFutureHeaders();
     }
 
     @Override
-    public synchronized void sendGetBlockBodies(List<BlockHeaderWrapper> headers) {
+    public synchronized ListenableFuture<List<Block>> sendGetBlockBodies(List<BlockHeaderWrapper> headers) {
         syncState = BLOCK_RETRIEVING;
         sentHeaders.clear();
         sentHeaders.addAll(headers);
@@ -229,6 +250,9 @@ public class Eth62 extends EthHandler {
         GetBlockBodiesMessage msg = new GetBlockBodiesMessage(hashes);
 
         sendMessage(msg);
+
+        futureBlocks = SettableFuture.create();
+        return futureBlocks;
     }
 
     @Override
@@ -369,14 +393,7 @@ public class Eth62 extends EthHandler {
             processInitHeaders(received);
         else {
             syncStats.addHeaders(received.size());
-
-            logger.debug("Adding " + received.size() + " headers to the queue.");
-
-            if (!syncManager.validateAndAddHeaders(received, channel.getNodeId())) {
-
-                dropConnection();
-                return;
-            }
+            request.getFutureHeaders().set(received);
         }
 
         syncState = IDLE;
@@ -414,7 +431,8 @@ public class Eth62 extends EthHandler {
             return;
         }
 
-        syncManager.addList(blocks, channel.getNodeId());
+        futureBlocks.set(blocks);
+        futureBlocks = null;
 
         syncState = IDLE;
     }
@@ -587,11 +605,6 @@ public class Eth62 extends EthHandler {
     @Override
     public SyncStatistics getStats() {
         return syncStats;
-    }
-
-    @Override
-    public EthVersion getVersion() {
-        return version;
     }
 
     @Override
@@ -788,7 +801,7 @@ public class Eth62 extends EthHandler {
 
         return String.format(
                 "Peer %s: [ %s, %16s, ping %6s ms, difficulty %s, best block %s ]: %s",
-                version,
+                getVersion(),
                 channel.getPeerIdShort(),
                 syncState,
                 (int)channel.getPeerStats().getAvgLatency(),

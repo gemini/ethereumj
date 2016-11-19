@@ -4,11 +4,11 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.ByteArrayWrapper;
-import org.ethereum.db.RepositoryImpl;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.client.PeerClient;
 import org.ethereum.net.rlpx.discover.UDPListener;
+import org.ethereum.sync.FastSyncManager;
 import org.ethereum.sync.SyncManager;
 import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.server.ChannelManager;
@@ -56,6 +56,9 @@ public class WorldManager {
     private SyncManager syncManager;
 
     @Autowired
+    private FastSyncManager fastSyncManager;
+
+    @Autowired
     private SyncPool pool;
 
     @Autowired
@@ -76,12 +79,12 @@ public class WorldManager {
 
     private Blockchain blockchain;
 
-    private RepositoryImpl repository;
+    private Repository repository;
 
     private BlockStore blockStore;
 
     @Autowired
-    public WorldManager(final SystemProperties config, final RepositoryImpl repository,
+    public WorldManager(final SystemProperties config, final Repository repository,
                         final EthereumListener listener, final Blockchain blockchain,
                         final BlockStore blockStore) {
         this.listener = listener;
@@ -157,7 +160,8 @@ public class WorldManager {
                 repository.createAccount(key.getData());
                 repository.addBalance(key.getData(), genesis.getPremine().get(key).getBalance());
             }
-            repository.commitBlock(genesis.getHeader());
+//            repository.commitBlock(genesis.getHeader());
+            repository.commit();
 
             blockStore.saveBlock(Genesis.getInstance(config), Genesis.getInstance(config).getCumulativeDifficulty(), true);
 
@@ -165,7 +169,7 @@ public class WorldManager {
             blockchain.setTotalDifficulty(Genesis.getInstance(config).getCumulativeDifficulty());
 
             listener.onBlock(new BlockSummary(Genesis.getInstance(config), new HashMap<byte[], BigInteger>(), new ArrayList<TransactionReceipt>(), new ArrayList<TransactionExecutionSummary>()));
-            repository.dumpState(Genesis.getInstance(config), 0, 0, null);
+//            repository.dumpState(Genesis.getInstance(config), 0, 0, null);
 
             logger.info("Genesis block loaded");
         } else {

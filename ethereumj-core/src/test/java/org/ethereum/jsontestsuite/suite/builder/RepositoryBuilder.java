@@ -1,9 +1,12 @@
 package org.ethereum.jsontestsuite.suite.builder;
 
 import org.ethereum.core.AccountState;
-import org.ethereum.datasource.HashMapDB;
-import org.ethereum.db.*;
 import org.ethereum.core.Repository;
+import org.ethereum.datasource.MapDB;
+import org.ethereum.db.RepositoryRoot;
+import org.ethereum.db.ByteArrayWrapper;
+import org.ethereum.db.ContractDetails;
+import org.ethereum.jsontestsuite.suite.ContractDetailsCacheImpl;
 import org.ethereum.jsontestsuite.suite.model.AccountTck;
 
 import java.util.HashMap;
@@ -34,11 +37,12 @@ public class RepositoryBuilder {
             detailsBatch.put(wrap(parseData(address)), detailsCache);
         }
 
-        RepositoryImpl repositoryDummy = new RepositoryImpl(new HashMapDB().setClearOnClose(false),
-                new HashMapDB().setClearOnClose(false));
+        RepositoryRoot repositoryDummy = new RepositoryRoot(new MapDB<byte[]>());
         Repository track = repositoryDummy.startTracking();
+
         track.updateBatch(stateBatch, detailsBatch);
         track.commit();
+        repositoryDummy.commit();
 
         return repositoryDummy;
     }
