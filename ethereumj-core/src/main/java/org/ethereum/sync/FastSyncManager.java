@@ -13,6 +13,7 @@ import org.ethereum.datasource.HashMapDB;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.net.client.Capability;
+import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.handler.Eth63;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.rlpx.discover.NodeHandler;
@@ -212,7 +213,7 @@ public class FastSyncManager {
     }
 
     boolean requestNextNodes(int cnt) {
-        final Channel idle = pool.getAnyIdle();
+        final Channel idle = pool.getAnyIdleWithVersion(EthVersion.V63);
 
         if (idle != null) {
             final List<byte[]> hashes = new ArrayList<>();

@@ -3,6 +3,7 @@ package org.ethereum.sync;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Blockchain;
 import org.ethereum.listener.EthereumListener;
+import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.rlpx.discover.NodeHandler;
 import org.ethereum.net.rlpx.discover.NodeManager;
@@ -111,6 +112,18 @@ public class SyncPool {
         Collections.shuffle(channels);
         for (Channel peer : channels) {
             if (peer.isIdle())
+                return peer;
+        }
+
+        return null;
+    }
+
+    @Nullable
+    public synchronized Channel getAnyIdleWithVersion(EthVersion version) {
+        ArrayList<Channel> channels = new ArrayList<>(activePeers);
+        Collections.shuffle(channels);
+        for (Channel peer : channels) {
+            if (peer.isIdle() && version.equals(peer.getEthVersion()))
                 return peer;
         }
 
