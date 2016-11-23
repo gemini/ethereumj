@@ -410,10 +410,14 @@ public class Program {
         } else
             track.createAccount(newAddress);
 
+        if (blockchainConfig.eip161()) {
+            track.increaseNonce(newAddress);
+        }
+
         // [4] TRANSFER THE BALANCE
-        track.addBalance(senderAddress, endowment.negate());
         BigInteger newBalance = ZERO;
         if (!byTestingSuite()) {
+            track.addBalance(senderAddress, endowment.negate());
             newBalance = track.addBalance(newAddress, endowment);
         }
 
@@ -448,6 +452,9 @@ public class Program {
             } else {
                 track.saveCode(newAddress, EMPTY_BYTE_ARRAY);
             }
+        } else if (getLength(code) > blockchainConfig.getConstants().getMAX_CONTRACT_SZIE()) {
+            result.setException(Program.Exception.notEnoughSpendingGas("Contract size too large: " + getLength(result.getHReturn()),
+                    storageCost, this));
         } else {
             result.spendGas(storageCost);
             track.saveCode(newAddress, code);
@@ -466,7 +473,8 @@ public class Program {
             return;
         }
 
-        track.commit();
+        if (!byTestingSuite())
+            track.commit(getNumber().longValue());
         getResult().addDeleteAccounts(result.getDeleteAccounts());
 
         // IN SUCCESS PUSH THE ADDRESS INTO THE STACK
@@ -526,7 +534,6 @@ public class Program {
         // FETCH THE CODE
         byte[] programCode = getStorage().isExist(codeAddress) ? getStorage().getCode(codeAddress) : EMPTY_BYTE_ARRAY;
 
-        track.addBalance(senderAddress, endowment.negate());
 
         BigInteger contextBalance = ZERO;
         if (byTestingSuite()) {
@@ -535,6 +542,7 @@ public class Program {
                     msg.getGas().getNoLeadZeroesData(),
                     msg.getEndowment().getNoLeadZeroesData());
         } else {
+            track.addBalance(senderAddress, endowment.negate());
             contextBalance = track.addBalance(contextAddress, endowment);
         }
 
@@ -571,6 +579,8 @@ public class Program {
                 track.rollback();
                 stackPushZero();
                 return;
+            } else if (byTestingSuite()) {
+                logger.info("Testing run, skipping storage diff listener");
             } else if (Arrays.equals(transaction.getReceiveAddress(), internalTx.getReceiveAddress())) {
                 storageDiffListener.merge(program.getStorageDiff());
             }
@@ -586,7 +596,7 @@ public class Program {
         }
 
         // 4. THE FLAG OF SUCCESS IS ONE PUSHED INTO THE STACK
-        track.commit();
+        track.commit(getNumber().longValue());
         stackPushOne();
 
         // 5. REFUND THE REMAIN GAS
@@ -1102,6 +1112,15 @@ public class Program {
             this.refundGas(0, "call pre-compiled"); //matches cpp logic
             this.stackPushZero();
             track.rollback();
+
+            // corner case for EIP 161 and a single execution of the tx
+            // cf416c536ec1a19ed1fb89e4ec7ffb3cf73aa413b3aa9b77d60e4fd81a4296ba
+            // in the block #2675119
+            // Even on OOG the contract should still be marked dirty
+            // To be cleared if it is 'empty'
+            track = getStorage().startTracking();
+            track.getAccountState(contextAddress).setDirty(true);
+            track.commit(getNumber().longValue());
         } else {
 
             this.refundGas(msg.getGas().longValue() - requiredGas, "call pre-compiled");
@@ -1109,7 +1128,7 @@ public class Program {
 
             this.memorySave(msg.getOutDataOffs().intValue(), out);
             this.stackPushOne();
-            track.commit();
+            track.commit(getNumber().longValue());
         }
     }
 

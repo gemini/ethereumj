@@ -63,9 +63,9 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     private DatabaseImpl detailsDB = null;
 
     private KeyValueDataSource detailsDS;
-    private KeyValueDataSource stateDS;
-    private CachingDataSource stateDSCache;
-    private JournalPruneDataSource stateDSPrune;
+    public KeyValueDataSource stateDS;
+    public CachingDataSource stateDSCache;
+    public JournalPruneDataSource stateDSPrune;
 
     ReadWriteLock rwLock = new ReentrantReadWriteLock();
 
@@ -170,7 +170,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
             AccountState accountState = stateCache.get(hash);
             ContractDetails contractDetails = detailsCache.get(hash);
 
-            if (accountState.isDeleted()) {
+            if (accountState == null || accountState.isDeleted()) {
                 delete(hash.getData());
                 logger.debug("delete: [{}]",
                         Hex.toHexString(hash.getData()));
@@ -262,6 +262,11 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
 
     @Override
     public void commit() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void commit(long blockNumber) {
         throw new UnsupportedOperationException();
     }
 

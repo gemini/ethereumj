@@ -1,5 +1,6 @@
 package org.ethereum.core;
 
+import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.db.BlockStore;
@@ -250,6 +251,10 @@ public class TransactionExecutor {
 
         BigInteger endowment = toBI(tx.getValue());
         transfer(cacheTrack, tx.getSender(), newContractAddress, endowment);
+
+        if (config.getBlockchainConfig().getConfigForBlock(currentBlock.getNumber()).eip161()) {
+            cacheTrack.increaseNonce(newContractAddress);
+        }
     }
 
     public void go() {
@@ -275,18 +280,26 @@ public class TransactionExecutor {
 
                 int returnDataGasValue = getLength(program.getResult().getHReturn()) *
                         config.getBlockchainConfig().getConfigForBlock(currentBlock.getNumber()).getGasCost().getCREATE_DATA();
-                if (m_endGas.compareTo(BigInteger.valueOf(returnDataGasValue)) >= 0) {
-
-                    m_endGas = m_endGas.subtract(BigInteger.valueOf(returnDataGasValue));
-                    cacheTrack.saveCode(tx.getContractAddress(), result.getHReturn());
-                } else {
-                    if (!config.getBlockchainConfig().getConfigForBlock(currentBlock.getNumber()).
-                            getConstants().createEmptyContractOnOOG()) {
-                        program.setRuntimeFailure(Program.Exception.notEnoughSpendingGas("No gas to return just created contract",
-                                returnDataGasValue, program));
-                        result = program.getResult();
-                    }
+                if (getLength(result.getHReturn()) > config.getBlockchainConfig().getConfigForBlock(currentBlock.getNumber()).getConstants().getMAX_CONTRACT_SZIE()) {
+                    // Contract size too large
+                    program.setRuntimeFailure(Program.Exception.notEnoughSpendingGas("Contract size too large: " + getLength(result.getHReturn()),
+                            returnDataGasValue, program));
+                    result = program.getResult();
                     result.setHReturn(EMPTY_BYTE_ARRAY);
+                } else {
+                    if (m_endGas.compareTo(BigInteger.valueOf(returnDataGasValue)) >= 0) {
+
+                        m_endGas = m_endGas.subtract(BigInteger.valueOf(returnDataGasValue));
+                        cacheTrack.saveCode(tx.getContractAddress(), result.getHReturn());
+                    } else {
+                        if (!config.getBlockchainConfig().getConfigForBlock(currentBlock.getNumber()).
+                                getConstants().createEmptyContractOnOOG()) {
+                            program.setRuntimeFailure(Program.Exception.notEnoughSpendingGas("No gas to return just created contract",
+                                    returnDataGasValue, program));
+                            result = program.getResult();
+                        }
+                        result.setHReturn(EMPTY_BYTE_ARRAY);
+                    }
                 }
             }
 
@@ -320,7 +333,7 @@ public class TransactionExecutor {
             return null;
         }
 
-        cacheTrack.commit();
+        cacheTrack.commit(currentBlock.getNumber());
 
         // Should include only LogInfo's that was added during not rejected transactions
         List<LogInfo> notRejectedLogInfos = new ArrayList<>();

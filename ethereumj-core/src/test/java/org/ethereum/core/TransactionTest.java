@@ -27,6 +27,7 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -681,5 +682,43 @@ public class TransactionTest {
 
         track.commit();
         return executor;
+    }
+
+    @Test
+    public void afterEIP158Test() throws Exception {
+        int chainId = 1;
+        String rlpUnsigned = "ec098504a817c800825208943535353535353535353535353535353535353535880de0b6b3a764000080018080";
+        String unsignedHash = "daf5a779ae972f972197303d7b574746c7ef83eadac0f2791ad23db92e4c8e53";
+        String privateKey = "4646464646464646464646464646464646464646464646464646464646464646";
+        BigInteger signatureR = new BigInteger("18515461264373351373200002665853028612451056578545711640558177340181847433846");
+        BigInteger signatureS = new BigInteger("46948507304638947509940763649030358759909902576025900602547168820602576006531");
+        String signedTxRlp = "f86c098504a817c800825208943535353535353535353535353535353535353535880de0b6b3a76400008025a028ef61340bd939bc2195fe537567866003e1a15d3c71ff63e1590620aa636276a067cbe9d8997f761aecb703304b3800ccf555c9f3dc64214b297fb1966a3b6d83";
+
+        Transaction tx = Transaction.create(
+                "3535353535353535353535353535353535353535",
+                new BigInteger("1000000000000000000"),
+                new BigInteger("9"),
+                new BigInteger("20000000000"),
+                new BigInteger("21000"),
+                chainId
+        );
+
+        // Checking RLP of unsigned transaction and its hash
+        assert Arrays.equals(Hex.decode(rlpUnsigned), tx.getEncoded());
+        assert Arrays.equals(Hex.decode(unsignedHash), tx.getHash());
+
+        ECKey ecKey = ECKey.fromPrivate(Hex.decode(privateKey));
+        tx.sign(ecKey);
+
+        // Checking modified signature
+        assert tx.getSignature().r.equals(signatureR);
+        assert tx.getSignature().s.equals(signatureS);
+
+        // Checking that we get correct TX in the end
+        assert Arrays.equals(Hex.decode(signedTxRlp), tx.getEncoded());
+
+        // Check that we could correctly extract tx from new RLP
+        Transaction txSigned = new Transaction(Hex.decode(signedTxRlp));
+        assert txSigned.getChainId() == chainId;
     }
 }

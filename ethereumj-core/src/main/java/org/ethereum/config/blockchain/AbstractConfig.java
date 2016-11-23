@@ -5,10 +5,7 @@ import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.config.Constants;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.core.Block;
-import org.ethereum.core.BlockHeader;
-import org.ethereum.core.Repository;
-import org.ethereum.core.Transaction;
+import org.ethereum.core.*;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.RepositoryTrack;
 import org.ethereum.mine.EthashMiner;
@@ -21,6 +18,7 @@ import org.ethereum.vm.program.Program;
 import java.math.BigInteger;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import static org.ethereum.util.BIUtil.max;
 
@@ -88,7 +86,7 @@ public abstract class AbstractConfig implements BlockchainConfig, BlockchainNetC
 
     @Override
     public boolean acceptTransactionSignature(Transaction tx) {
-        return true;
+        return tx.getChainId() == null;
     }
 
     @Override
@@ -121,5 +119,15 @@ public abstract class AbstractConfig implements BlockchainConfig, BlockchainNetC
     @Override
     public DataWord getCreateGas(DataWord availableGas) {
         return availableGas;
+    }
+
+    @Override
+    public boolean eip161() {
+        return false;
+    }
+
+    @Override
+    public Integer getChainId() {
+        return null;
     }
 }

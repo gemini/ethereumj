@@ -31,7 +31,7 @@ repositories {
 sourceCompatibility = 1.7
 
 mainClassName = 'org.ethereum.Start'
-applicationDefaultJvmArgs = ["-server", "-Xss32m", "-XX:-OmitStackTraceInFastThrow"]
+applicationDefaultJvmArgs = ["-server", "-Xss32m", "-Xmx4000M", "-XX:-OmitStackTraceInFastThrow"]
 
 if ( project.hasProperty('jvmArgs') ) {
     applicationDefaultJvmArgs = applicationDefaultJvmArgs + project.jvmArgs.split('\\s+').toList()
@@ -54,6 +54,12 @@ task runMorden (type: JavaExec) {
     main = mainClassName
     classpath = sourceSets.main.runtimeClasspath
     jvmArgs = applicationDefaultJvmArgs + '-Dethereumj.conf.res=morden.conf'
+}
+
+task runRopsten (type: JavaExec) {
+    main = mainClassName
+    classpath = sourceSets.main.runtimeClasspath
+    jvmArgs = applicationDefaultJvmArgs + '-Dethereumj.conf.res=ropsten.conf'
 }
 
 task runTest (type: JavaExec) {

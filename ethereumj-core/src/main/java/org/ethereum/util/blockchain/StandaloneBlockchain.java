@@ -244,7 +244,9 @@ public class StandaloneBlockchain implements LocalBlockchain {
         Transaction transaction = new Transaction(ByteUtil.longToBytesNoLeadZeroes(nonce),
                 ByteUtil.longToBytesNoLeadZeroes(gasPrice),
                 ByteUtil.longToBytesNoLeadZeroes(gasLimit),
-                toAddress, ByteUtil.bigIntegerToBytes(value), data);
+                toAddress, ByteUtil.bigIntegerToBytes(value),
+                data,
+                null);
         transaction.sign(sender);
         return transaction;
     }
@@ -260,7 +262,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
             Repository repository = getBlockchain().getRepository();
             Repository track = repository.startTracking();
             track.createAccount(senderPrivateKey.getAddress());
-            track.commit();
+            track.commit(0);
         }
     }
 
@@ -405,7 +407,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
             track.addBalance(acc.getLeft(), acc.getRight());
         }
 
-        track.commit();
+        track.commit(0);
         repository.commitBlock(genesis.getHeader());
 
         blockStore.saveBlock(genesis, genesis.getCumulativeDifficulty(), true);

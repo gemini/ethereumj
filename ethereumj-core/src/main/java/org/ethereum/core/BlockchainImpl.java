@@ -484,7 +484,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         track = repository.startTracking();
         BlockSummary summary = applyBlock(block);
         List<TransactionReceipt> receipts = summary.getReceipts();
-        track.commit();
+        track.commit(block.getNumber());
         block.setStateRoot(getRepository().getRoot());
 
         popState();
@@ -575,7 +575,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             }
         }
 
-        track.commit();
+        track.commit(block.getNumber());
         updateTotalDifficulty(block);
         summary.setTotalDifficulty(getTotalDifficulty());
 
@@ -843,7 +843,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
             totalGasUsed += executor.getGasUsed();
 
-            track.commit();
+            track.commit(block.getNumber());
             TransactionReceipt receipt = executor.getReceipt();
             receipt.setPostTxState(repository.getRoot());
 
@@ -866,7 +866,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
         Map<byte[], BigInteger> rewards = addReward(block, summaries);
 
-        track.commit();
+        track.commit(block.getNumber());
 
         stateLogger.info("applied reward for block: [{}]  \n  state: [{}]",
                 block.getNumber(),
@@ -1049,10 +1049,6 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
     public void startTracking() {
         track = repository.startTracking();
-    }
-
-    public void commitTracking() {
-        track.commit();
     }
 
     public void setExitOn(long exitOn) {
