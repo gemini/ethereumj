@@ -578,6 +578,7 @@ public class ImportLightTest {
 
 
     @Test
+    @Ignore
     public void suicideInFailedCall() throws Exception {
         // check that if a contract is suicide in call which is failed (thus suicide is reverted)
         // the refund for this suicide is not added
