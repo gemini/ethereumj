@@ -44,7 +44,8 @@ import static org.ethereum.util.ByteUtil.bigIntegerToBytes;
 /**
  * Created by Anton Nashatyrev on 25.11.2015.
  */
-@Component
+//@Component
+// disabled as a @Component because of a NullPointerException during bean initialization
 public class JsonRpcImpl implements JsonRpc {
     private static final Logger logger = LoggerFactory.getLogger("jsonrpc");
 
