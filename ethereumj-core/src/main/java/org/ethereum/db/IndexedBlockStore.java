@@ -459,12 +459,12 @@ public class IndexedBlockStore extends AbstractBlockstore{
         logger.info("Closing IndexedBlockStore...");
         try {
             indexDS.close();
-        } catch (Exception e) {
+        } catch (Throwable e) {
             logger.warn("Problems closing indexDS", e);
         }
         try {
             blocksDS.close();
-        } catch (Exception e) {
+        } catch (Throwable e) {
             logger.warn("Problems closing blocksDS", e);
         }
     }
