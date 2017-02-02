@@ -145,8 +145,7 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
 
     @Override
     public void close() {
-        logger.info("Shutting down Ethereum instance...");
-        worldManager.close();
+        logger.info("### Shutdown initiated ### ");
         ((AbstractApplicationContext) getApplicationContext()).close();
     }
 
@@ -370,8 +369,8 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
      */
     @Override
     public void stop(Runnable callback) {
-        logger.info("### Shutdown initiated ### ");
-        close();
+        logger.info("Shutting down Ethereum instance...");
+        worldManager.close();
         callback.run();
     }
 
